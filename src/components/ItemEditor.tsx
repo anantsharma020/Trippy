@@ -151,7 +151,6 @@ export default function ItemEditor({ trip, item, onClose }: {
               {(d.category === 'Accommodation') && <>
                 <Field label="Contact"><Input value={d.booking?.contact || ''} onChange={(e) => set({ booking: { ...d.booking, contact: e.target.value } })} /></Field>
                 <Field label="Cancellation by"><Input type="date" value={d.booking?.cancellationDeadline || ''} onChange={(e) => set({ booking: { ...d.booking, cancellationDeadline: e.target.value } })} /></Field>
-                <div className="sm:col-span-2 text-xs text-slate-500">Address comes from the <span className="font-medium text-slate-700">Location</span> field; check-in / check-out from <span className="font-medium text-slate-700">Stay dates</span> above.</div>
               </>}
               {(d.category === 'Car rental') && <>
                 <Field label="Pickup location"><Input value={d.booking?.address || ''} onChange={(e) => set({ booking: { ...d.booking, address: e.target.value } })} placeholder="Airport desk…" /></Field>

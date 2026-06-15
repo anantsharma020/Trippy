@@ -26,7 +26,7 @@ export default function Home() {
           <EmptyState icon={<Plane size={28} />} title="No trips yet" hint="Start with just a name and a destination — add the rest whenever you like."
             action={<Button onClick={() => setCreating(true)}><Plus size={16} />Plan your first trip</Button>} />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {upcoming.map((t) => <TripCard key={t.id} trip={t} items={items} actions={actions} profile={profile} />)}
           </div>
         )}
@@ -35,7 +35,7 @@ export default function Home() {
       {past.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Past trips</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {past.map((t) => <TripCard key={t.id} trip={t} items={items} actions={actions} profile={profile} />)}
           </div>
         </section>

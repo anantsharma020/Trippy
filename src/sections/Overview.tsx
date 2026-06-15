@@ -83,7 +83,7 @@ export default function Overview() {
         </div>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>
           <SecHead icon={<CloudSun size={16} />} title="Weather" />
           <Weather destinations={trip.destinations} />
@@ -108,7 +108,7 @@ export default function Overview() {
         )}
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>
           <SecHead icon={<CheckSquare size={16} />} title="Open action items" to={`/trip/${trip.id}/actions`} />
           {openActions.length === 0 ? <Empty>No open tasks.</Empty> : (

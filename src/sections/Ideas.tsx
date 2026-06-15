@@ -82,7 +82,7 @@ export default function Ideas() {
         <EmptyState icon={<Lightbulb size={28} />} title="No ideas yet"
           hint="Capture restaurants, sights, viewpoints, day trips — anything you might want to do. Add a date later to schedule it." />
       ) : view === 'list' ? (
-        <div className="grid gap-2 sm:grid-cols-2">{filtered.map((i) => <ItemCard key={i.id} item={i} trip={trip} onOpen={openItem} />)}</div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{filtered.map((i) => <ItemCard key={i.id} item={i} trip={trip} onOpen={openItem} />)}</div>
       ) : view === 'map' ? (
         mapPoints.length ? <MapView points={mapPoints} /> : <EmptyState title="No locations" hint="Add a location to ideas to see them on the map." />
       ) : (
@@ -122,7 +122,7 @@ function Grouped({ items, view, trip, onOpen, profile }: {
             {view === 'category' && <span>{CATEGORY_EMOJI[key as keyof typeof CATEGORY_EMOJI] || '•'}</span>}{key}
             <span className="text-xs font-normal text-slate-500">· {list.length}</span>
           </h3>
-          <div className="grid gap-2 sm:grid-cols-2">{list.map((i) => <ItemCard key={i.id} item={i} trip={trip} onOpen={onOpen} />)}</div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{list.map((i) => <ItemCard key={i.id} item={i} trip={trip} onOpen={onOpen} />)}</div>
         </div>
       ))}
     </div>

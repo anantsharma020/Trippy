@@ -11,7 +11,7 @@ const FOOD = ['Restaurant', 'Café', 'Bar']
 export default function TripMap() {
   const { trip } = useTrip()
   useApp((s) => s.items)
-  const [layers, setLayers] = useState({ itinerary: true, ideas: true, accommodation: true, food: true, routes: true })
+  const [layers, setLayers] = useState({ itinerary: true, ideas: true, accommodation: true, food: true, routes: false })
   const toggle = (k: keyof typeof layers) => setLayers((l) => ({ ...l, [k]: !l[k] }))
 
   const items = tripItems(trip.id).filter((i) => i.lat != null)

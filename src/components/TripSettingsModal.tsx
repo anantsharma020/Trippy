@@ -49,10 +49,10 @@ export default function TripSettingsModal({ trip, onClose }: { trip: Trip; onClo
                   <span className="font-medium text-slate-200">{d.name}</span>
                   <button onClick={() => set({ destinations: t.destinations.filter((x) => x.id !== d.id) })} className="text-slate-400 hover:text-rose-400"><X size={15} /></button>
                 </div>
-                <div className="mt-2 grid grid-cols-3 gap-2">
+                <div className="mt-2 grid grid-cols-2 gap-2">
                   <Field label="From"><Input type="date" value={d.startDate || ''} onChange={(e) => setDest(d.id, { startDate: e.target.value || undefined })} /></Field>
                   <Field label="To"><Input type="date" value={d.endDate || ''} onChange={(e) => setDest(d.id, { endDate: e.target.value || undefined })} /></Field>
-                  <Field label="Currency"><Input value={d.currency || ''} onChange={(e) => setDest(d.id, { currency: e.target.value.toUpperCase() || undefined })} placeholder="JPY" /></Field>
+                  <div className="col-span-2"><Field label="Currency"><Input value={d.currency || ''} onChange={(e) => setDest(d.id, { currency: e.target.value.toUpperCase() || undefined })} placeholder="JPY" /></Field></div>
                 </div>
               </div>
             ))}

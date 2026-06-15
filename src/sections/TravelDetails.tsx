@@ -42,7 +42,7 @@ export default function TravelDetails() {
         return (
           <section key={g.title}>
             <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-300"><g.icon size={16} />{g.title}</h3>
-            <div className="grid gap-3 sm:grid-cols-2">{list.map((i) => <BookingCard key={i.id} item={i} onOpen={() => setOpened({ item: i, edit: false })} />)}</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{list.map((i) => <BookingCard key={i.id} item={i} onOpen={() => setOpened({ item: i, edit: false })} />)}</div>
           </section>
         )
       })}
@@ -50,7 +50,7 @@ export default function TravelDetails() {
       {other.length > 0 && (
         <section>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-300"><FileText size={16} />Other documents & bookings</h3>
-          <div className="grid gap-3 sm:grid-cols-2">{other.map((i) => <BookingCard key={i.id} item={i} onOpen={() => setOpened({ item: i, edit: false })} />)}</div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{other.map((i) => <BookingCard key={i.id} item={i} onOpen={() => setOpened({ item: i, edit: false })} />)}</div>
         </section>
       )}
 
@@ -97,9 +97,9 @@ function BookingCard({ item, onOpen }: { item: Item; onOpen: () => void }) {
           {(b.fromCode || b.toCode) && <Row label="Route" value={[b.fromCode, b.toCode].filter(Boolean).join(' → ')} />}
           <Row label="Seat" value={b.seat} />
         </>}
-        <Row label="Address" value={b.address} />
-        <Row label="Check-in" value={b.checkIn || (item.startTime ? `${fmtDate(item.date)} ${item.startTime}` : undefined)} />
-        <Row label="Check-out" value={b.checkOut} />
+        <Row label="Address" value={b.address || item.address} />
+        <Row label="Check-in" value={item.date ? `${fmtDate(item.date)}${item.startTime ? ' ' + item.startTime : ''}` : b.checkIn} />
+        <Row label="Check-out" value={item.endDate ? `${fmtDate(item.endDate)}${item.endTime ? ' ' + item.endTime : ''}` : b.checkOut} />
         <Row label="Cancel by" value={b.cancellationDeadline ? fmtDate(b.cancellationDeadline) : undefined} />
         <Row label="Contact" value={b.contact} />
       </div>

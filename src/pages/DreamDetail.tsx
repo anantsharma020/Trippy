@@ -56,7 +56,7 @@ export default function DreamDetail() {
         {ideas.length === 0 ? (
           <EmptyState icon={<Plane size={26} />} title="No ideas yet" hint="Restaurants, sights, neighbourhoods — anything you might want to do there." />
         ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {ideas.map((i) => <ItemCard key={i.id} item={i} trip={dream} onOpen={(it) => setOpened({ item: it, edit: false })} />)}
           </div>
         )}

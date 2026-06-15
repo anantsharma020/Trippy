@@ -115,7 +115,7 @@ function AddVisitedModal({ selected, onToggle, onClose }: {
   }, [q])
 
   return (
-    <Modal open onClose={onClose} title="Countries you've visited">
+    <Modal open onClose={onClose} align="top" title="Countries you've visited">
       <div className="relative mb-3">
         <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a country…" className="pl-9" autoFocus />

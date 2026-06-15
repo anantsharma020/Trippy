@@ -11,6 +11,12 @@ const QUICK = ['👍', '❤️', '🔥', '🤔']
 
 export function scheduleLabel(i: Item): string {
   if (!i.date) return ''
+  // Accommodation shows the whole stay: check-in and check-out, each with time.
+  if (i.category === 'Accommodation') {
+    const ci = `In ${fmtDate(i.date, 'MMM d')}${i.startTime ? ` ${i.startTime}` : ''}`
+    const co = i.endDate ? ` · Out ${fmtDate(i.endDate, 'MMM d')}${i.endTime ? ` ${i.endTime}` : ''}` : ''
+    return ci + co
+  }
   const base = fmtDate(i.date, 'EEE, MMM d')
   if (i.startTime) return `${base} · ${i.startTime}${i.endTime ? `–${i.endTime}` : ''}`
   if (i.roughTime) return `${base} · ${i.roughTime}`

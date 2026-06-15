@@ -66,7 +66,7 @@ export default function Friends() {
           {accepted.length === 0 ? (
             <EmptyState icon={<Users size={28} />} title="No friends yet" hint="Add travel partners by email so you can plan trips together." />
           ) : (
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {accepted.map((p) => (
                 <div key={p.id} className="flex items-center gap-3 rounded-xl bg-ink-900/70 ring-1 ring-ink-800 px-3 py-2.5">
                   <Avatar name={p.name} src={p.photoUrl} size={34} />

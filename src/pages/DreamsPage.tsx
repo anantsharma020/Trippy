@@ -29,7 +29,7 @@ export default function DreamsPage() {
           hint="Save a destination like “Japan” and start dropping in ideas you come across."
           action={<Button onClick={() => setCreating(true)}><Plus size={16} />Add a dream</Button>} />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {dreams.map((d) => {
             const ideas = tripItems(d.id).length
             return (

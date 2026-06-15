@@ -58,8 +58,9 @@ export function AvatarStack({ names, max = 4, size = 26 }: { names: string[]; ma
   )
 }
 
-export function Modal({ open, onClose, title, children, wide }: {
+export function Modal({ open, onClose, title, children, wide, align = 'bottom' }: {
   open: boolean; onClose: () => void; title?: React.ReactNode; children: React.ReactNode; wide?: boolean
+  align?: 'bottom' | 'top'
 }) {
   useEffect(() => {
     if (!open) return
@@ -70,11 +71,13 @@ export function Modal({ open, onClose, title, children, wide }: {
   }, [open, onClose])
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal>
+    <div className={classNames(
+      'fixed inset-0 z-[1000] flex justify-center p-0 sm:p-4',
+      align === 'top' ? 'items-start sm:items-center' : 'items-end sm:items-center')} role="dialog" aria-modal>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className={classNames(
-        'relative w-full bg-ink-900 ring-1 ring-ink-700 shadow-2xl animate-fadein',
-        'rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto safe-bottom',
+        'relative w-full bg-ink-900 ring-1 ring-ink-700 shadow-2xl animate-fadein overflow-y-auto',
+        align === 'top' ? 'rounded-b-3xl sm:rounded-3xl max-h-[88vh]' : 'rounded-t-3xl sm:rounded-3xl max-h-[92vh] safe-bottom',
         wide ? 'sm:max-w-2xl' : 'sm:max-w-md')}>
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-ink-900/95 backdrop-blur px-5 py-4 border-b border-ink-800">
           <h2 className="text-base font-semibold text-slate-900">{title}</h2>
@@ -96,7 +99,7 @@ export function Field({ label, hint, children }: { label?: string; hint?: string
   )
 }
 
-const inputBase = 'w-full rounded-xl bg-ink-850 border border-ink-700 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 transition'
+const inputBase = 'w-full min-w-0 box-border rounded-xl bg-ink-850 border border-ink-700 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 transition'
 
 export const Input = (p: React.InputHTMLAttributes<HTMLInputElement>) =>
   <input {...p} className={classNames(inputBase, p.className)} />

@@ -14,6 +14,12 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: false, // we register manually (see main.tsx) to poll for updates
+      workbox: {
+        clientsClaim: true,
+        skipWaiting: true,
+        cleanupOutdatedCaches: true,
+      },
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Trippy — Travel Planning',
