@@ -10,7 +10,7 @@ import ImagePicker from './ImagePicker'
 import { currencyFromCountry } from '../lib/currencies'
 
 export default function TripSettingsModal({ trip, onClose }: { trip: Trip; onClose: () => void }) {
-  const { saveTrip, deleteTrip, setMember, removeMember, myFriends, profile, user } = useApp.getState()
+  const { saveTrip, deleteTrip, removeMember, profile, user } = useApp.getState()
   const friends = useApp((s) => s.myFriends())
   const nav = useNavigate()
   const [t, setT] = useState<Trip>(trip)
@@ -21,7 +21,13 @@ export default function TripSettingsModal({ trip, onClose }: { trip: Trip; onClo
 
   async function save() { await saveTrip(t); onClose() }
 
-  const memberRows = [{ userId: trip.ownerId, role: 'owner' as MemberRole }, ...trip.members.filter((m) => m.userId !== trip.ownerId)]
+  // Member edits accumulate in form state and persist once on Save — writing
+  // immediately would get overwritten by Save's (stale) copy of the trip.
+  const invite = (uid: string) => set({ members: [...t.members.filter((m) => m.userId !== uid), { userId: uid, role: 'editor' }] })
+  const changeRole = (uid: string, role: MemberRole) => set({ members: t.members.map((m) => (m.userId === uid ? { ...m, role } : m)) })
+  const kick = (uid: string) => set({ members: t.members.filter((m) => m.userId !== uid) })
+
+  const memberRows = [{ userId: t.ownerId, role: 'owner' as MemberRole }, ...t.members.filter((m) => m.userId !== t.ownerId)]
   const friendsNotMembers = friends.filter((f) => !memberRows.some((m) => m.userId === f.id))
 
   return (
@@ -72,10 +78,10 @@ export default function TripSettingsModal({ trip, onClose }: { trip: Trip; onClo
                     <span className="ml-auto flex items-center gap-1 text-xs text-amber-300"><Crown size={13} />Owner</span>
                   ) : isOwner ? (
                     <div className="ml-auto flex items-center gap-1">
-                      <Select value={m.role} onChange={(e) => setMember(trip, m.userId, e.target.value as MemberRole)} className="py-1 text-xs">
+                      <Select value={m.role} onChange={(e) => changeRole(m.userId, e.target.value as MemberRole)} className="py-1 text-xs">
                         <option value="editor">Can edit</option><option value="viewer">Can view</option>
                       </Select>
-                      <button onClick={() => removeMember(trip, m.userId)} className="text-slate-400 hover:text-rose-400"><Trash2 size={15} /></button>
+                      <button onClick={() => kick(m.userId)} className="text-slate-400 hover:text-rose-400"><Trash2 size={15} /></button>
                     </div>
                   ) : <span className="ml-auto text-xs text-slate-500">{m.role === 'editor' ? 'Can edit' : 'Can view'}</span>}
                 </div>
@@ -87,7 +93,7 @@ export default function TripSettingsModal({ trip, onClose }: { trip: Trip; onClo
               <p className="mb-1 text-xs text-slate-500">Invite a friend:</p>
               <div className="flex flex-wrap gap-2">
                 {friendsNotMembers.map((f) => (
-                  <button key={f.id} onClick={() => setMember(trip, f.id, 'editor')}
+                  <button key={f.id} onClick={() => invite(f.id)}
                     className="flex items-center gap-1.5 rounded-full bg-ink-850 ring-1 ring-ink-700 py-1 pl-1 pr-2.5 hover:ring-brand-500">
                     <Avatar name={f.name} src={f.photoUrl} size={22} /><span className="text-xs text-slate-200">{f.name}</span><UserPlus size={13} className="text-slate-400" />
                   </button>
