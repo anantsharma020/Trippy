@@ -29,8 +29,8 @@ export default function ProfilePage() {
     if (!file) return
     setMsg('Importing…')
     try {
-      const { trips, total } = await importBackup(file)
-      setMsg(`Restored ${trips} trip${trips === 1 ? '' : 's'} (${total} items).`)
+      const { trips, total, failed } = await importBackup(file)
+      setMsg(`Restored ${trips} trip${trips === 1 ? '' : 's'} (${total} records)${failed ? ` · ${failed} skipped` : ''}.`)
     } catch (err: any) {
       setMsg(err.message || 'Import failed')
     } finally {
