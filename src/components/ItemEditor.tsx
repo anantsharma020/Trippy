@@ -48,17 +48,19 @@ export default function ItemEditor({ trip, item, onClose }: {
           </Select>
         </Field>
 
-        <Field label="Location" hint="Search to drop a pin — this also sets the city">
-          {d.lat != null && (
-            <div className="mb-2 flex items-center justify-between rounded-xl bg-brand-50 px-3 py-2.5 ring-1 ring-brand-400/40">
-              <span className="flex items-center gap-2 text-sm text-slate-800"><MapPin size={15} className="text-brand-500" />{d.locationLabel || d.city || 'Pinned location'}</span>
-              <button type="button" onClick={() => set({ lat: undefined, lng: undefined, locationLabel: undefined })}
-                className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-rose-500"><X size={13} />Remove</button>
-            </div>
-          )}
-          <LocationSearch placeholder={d.lat != null ? 'Change location…' : 'Search address or place…'} onPick={(r) =>
-            set({ lat: r.latitude, lng: r.longitude, locationLabel: r.name, city: r.name })} />
-        </Field>
+        {!isFlight && (
+          <Field label="Location" hint="Search to drop a pin — this also sets the city">
+            {d.lat != null && (
+              <div className="mb-2 flex items-center justify-between rounded-xl bg-brand-50 px-3 py-2.5 ring-1 ring-brand-400/40">
+                <span className="flex items-center gap-2 text-sm text-slate-800"><MapPin size={15} className="text-brand-500" />{d.locationLabel || d.city || 'Pinned location'}</span>
+                <button type="button" onClick={() => set({ lat: undefined, lng: undefined, locationLabel: undefined })}
+                  className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-rose-500"><X size={13} />Remove</button>
+              </div>
+            )}
+            <LocationSearch placeholder={d.lat != null ? 'Change location…' : 'Search address or place…'} onPick={(r) =>
+              set({ lat: r.latitude, lng: r.longitude, locationLabel: r.name, city: r.name })} />
+          </Field>
+        )}
 
         {/* Scheduling — adding a date moves this into the Itinerary */}
         <div className="rounded-xl bg-ink-850/60 ring-1 ring-ink-800 p-3">
@@ -100,11 +102,13 @@ export default function ItemEditor({ trip, item, onClose }: {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Priority">
-            <Select value={d.priority || ''} onChange={(e) => set({ priority: (e.target.value || undefined) as any })}>
-              <option value="">—</option>{PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
-            </Select>
-          </Field>
+          {!isFlight && (
+            <Field label="Priority">
+              <Select value={d.priority || ''} onChange={(e) => set({ priority: (e.target.value || undefined) as any })}>
+                <option value="">—</option>{PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
+              </Select>
+            </Field>
+          )}
           <Field label="Est. cost">
             <div className="flex gap-2">
               <Input type="number" inputMode="decimal" value={d.cost ?? ''} onChange={(e) => set({ cost: e.target.value === '' ? undefined : Number(e.target.value) })} placeholder="0" />
@@ -115,10 +119,12 @@ export default function ItemEditor({ trip, item, onClose }: {
 
         <Field label="Notes"><Textarea value={d.notes || ''} onChange={(e) => set({ notes: e.target.value })} placeholder="Anything worth remembering…" /></Field>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Link"><Input value={d.link || ''} onChange={(e) => set({ link: e.target.value })} placeholder="https://…" /></Field>
-          <Field label="Source" hint="e.g. who recommended it"><Input value={d.source || ''} onChange={(e) => set({ source: e.target.value })} placeholder="Instagram, Emma…" /></Field>
-        </div>
+        {!isFlight && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Link"><Input value={d.link || ''} onChange={(e) => set({ link: e.target.value })} placeholder="https://…" /></Field>
+            <Field label="Source" hint="e.g. who recommended it"><Input value={d.source || ''} onChange={(e) => set({ source: e.target.value })} placeholder="Instagram, Emma…" /></Field>
+          </div>
+        )}
 
         {/* Travel-detail / booking payload */}
         <div className="rounded-xl bg-ink-850/60 ring-1 ring-ink-800 p-3">
@@ -137,9 +143,8 @@ export default function ItemEditor({ trip, item, onClose }: {
               {(d.category === 'Accommodation') && <>
                 <Field label="Address"><Input value={d.booking?.address || ''} onChange={(e) => set({ booking: { ...d.booking, address: e.target.value } })} /></Field>
                 <Field label="Contact"><Input value={d.booking?.contact || ''} onChange={(e) => set({ booking: { ...d.booking, contact: e.target.value } })} /></Field>
-                <Field label="Check-in"><Input value={d.booking?.checkIn || ''} onChange={(e) => set({ booking: { ...d.booking, checkIn: e.target.value } })} placeholder="Oct 4, 15:00" /></Field>
-                <Field label="Check-out"><Input value={d.booking?.checkOut || ''} onChange={(e) => set({ booking: { ...d.booking, checkOut: e.target.value } })} placeholder="Oct 8, 11:00" /></Field>
                 <Field label="Cancellation by"><Input type="date" value={d.booking?.cancellationDeadline || ''} onChange={(e) => set({ booking: { ...d.booking, cancellationDeadline: e.target.value } })} /></Field>
+                <div className="sm:col-span-2 text-xs text-slate-500">Check-in / check-out times are set under <span className="font-medium text-slate-700">Stay dates</span> above.</div>
               </>}
               {(d.category === 'Car rental') && <>
                 <Field label="Pickup location"><Input value={d.booking?.address || ''} onChange={(e) => set({ booking: { ...d.booking, address: e.target.value } })} placeholder="Airport desk…" /></Field>

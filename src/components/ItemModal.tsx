@@ -4,8 +4,14 @@ import type { Item, Trip } from '../lib/types'
 import { CATEGORY_EMOJI, toggleReaction, itemReactions } from '../lib/data'
 import { useApp } from '../lib/db'
 import { Modal, Button, Avatar, Chip } from '../ui/primitives'
-import { money } from '../lib/util'
+import { money, fmtDate } from '../lib/util'
 import { scheduleLabel } from './ItemCard'
+
+// Open a place in Google Maps — by coordinates if pinned, else by name.
+const mapsUrl = (item: Item) => {
+  const q = item.lat != null && item.lng != null ? `${item.lat},${item.lng}` : (item.locationLabel || item.city || '')
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`
+}
 import Comments from './Comments'
 import ItemEditor from './ItemEditor'
 
@@ -66,7 +72,11 @@ function ItemDetail({ trip, item, canEdit, onEdit, onClose }: {
         )}
 
         {(item.locationLabel || item.city) && (
-          <div className="flex items-center gap-2 text-sm text-slate-700"><MapPin size={15} className="text-brand-500" />{item.locationLabel || item.city}</div>
+          <a href={mapsUrl(item)} target="_blank" rel="noreferrer"
+            className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700">
+            <MapPin size={15} className="text-brand-500" />{item.locationLabel || item.city}
+            <ExternalLink size={13} className="opacity-70" />
+          </a>
         )}
 
         {item.notes && <p className="whitespace-pre-wrap rounded-xl bg-ink-850 px-3 py-2.5 text-sm text-slate-700">{item.notes}</p>}
@@ -105,8 +115,13 @@ function ItemDetail({ trip, item, canEdit, onEdit, onClose }: {
             <Row label="Baggage">{b.baggage}</Row>
           </>}
           <Row label="Address">{b.address}</Row>
-          <Row label="Check-in">{b.checkIn}</Row>
-          <Row label="Check-out">{b.checkOut}</Row>
+          {item.category === 'Accommodation' ? <>
+            <Row label="Check-in">{item.date ? `${fmtDate(item.date, 'EEE, MMM d')}${item.startTime ? ` · ${item.startTime}` : ''}` : ''}</Row>
+            <Row label="Check-out">{item.endDate ? `${fmtDate(item.endDate, 'EEE, MMM d')}${item.endTime ? ` · ${item.endTime}` : ''}` : ''}</Row>
+          </> : <>
+            <Row label="Check-in">{b.checkIn}</Row>
+            <Row label="Check-out">{b.checkOut}</Row>
+          </>}
           <Row label="Cancellation by">{b.cancellationDeadline}</Row>
           <Row label="Contact">{b.contact}</Row>
           <Row label="Added by">{createdBy?.name}</Row>

@@ -41,6 +41,10 @@ html, body, #root {
   height: 100%;
 }
 
+/* Never allow horizontal scroll on phones; long text wraps/truncates instead. */
+html, body { max-width: 100%; overflow-x: hidden; }
+#root { overflow-x: hidden; }
+
 body {
   margin: 0;
   background: radial-gradient(125% 120% at 50% 0%, #f1ebfb 0%, #ffffff 55%);

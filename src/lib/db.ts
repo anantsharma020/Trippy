@@ -47,6 +47,7 @@ interface AppState {
 
   // trips
   myTrips: () => Trip[]
+  myDreamTrips: () => Trip[]
   trip: (id: string) => Trip | undefined
   roleIn: (trip: Trip) => MemberRole | null
   createTrip: (t: Partial<Trip>) => Promise<Trip>
@@ -54,10 +55,14 @@ interface AppState {
   deleteTrip: (id: string) => Promise<void>
   setMember: (trip: Trip, userId: string, role: MemberRole) => Promise<void>
   removeMember: (trip: Trip, userId: string) => Promise<void>
+  convertDreamToTrip: (id: string) => Promise<void>
+  migrateDreams: () => Promise<void>
 }
 
 const group = (docs: Doc[], coll: Coll) =>
   docs.filter((d) => d.collection === coll).map((d) => d.data)
+
+let migratingDreams = false // guards against concurrent (StrictMode) migration
 
 export const useApp = create<AppState>((set, get) => ({
   ready: false,
@@ -184,8 +189,16 @@ export const useApp = create<AppState>((set, get) => ({
     const u = get().user
     if (!u) return []
     return get().trips
-      .filter((t) => t.ownerId === u.id || t.members.some((m) => m.userId === u.id))
+      .filter((t) => !t.isDream && (t.ownerId === u.id || t.members.some((m) => m.userId === u.id)))
       .sort((a, b) => (a.startDate || '9999').localeCompare(b.startDate || '9999'))
+  },
+
+  myDreamTrips: () => {
+    const u = get().user
+    if (!u) return []
+    return get().trips
+      .filter((t) => t.isDream && (t.ownerId === u.id || t.members.some((m) => m.userId === u.id)))
+      .sort((a, b) => a.name.localeCompare(b.name))
   },
 
   trip: (id) => get().trips.find((t) => t.id === id),
@@ -209,6 +222,7 @@ export const useApp = create<AppState>((set, get) => ({
       destinations: t.destinations || [],
       members: [{ userId: u.id, role: 'owner' }],
       createdAt: new Date().toISOString(),
+      isDream: t.isDream,
     }
     await get().put('trips', trip, trip.id, u.id)
     return trip
@@ -224,6 +238,38 @@ export const useApp = create<AppState>((set, get) => ({
   },
   removeMember: async (trip, userId) => {
     await get().saveTrip({ ...trip, members: trip.members.filter((m) => m.userId !== userId) })
+  },
+
+  // Promote a dream into a real trip — its ideas (items) come along automatically
+  // because they're already keyed to this trip id.
+  convertDreamToTrip: async (id) => {
+    const trip = get().trips.find((t) => t.id === id)
+    if (!trip) return
+    await get().saveTrip({ ...trip, isDream: false })
+  },
+
+  // One-time: turn legacy simple "dream destination" docs into dream-trips so the
+  // new Dreams page (which can hold ideas) shows them. Runs only if any exist.
+  migrateDreams: async () => {
+    const u = get().user
+    if (!u || migratingDreams) return
+    const legacy = get().dreams.filter((d) => d.userId === u.id)
+    if (legacy.length === 0) return
+    migratingDreams = true
+    try {
+      for (const d of legacy) {
+        const trip: Trip = {
+          id: uid(), name: d.name || 'Dream', ownerId: u.id,
+          destinations: d.lat != null ? [{ id: uid(), name: d.name, lat: d.lat, lng: d.lng }] : [],
+          members: [{ userId: u.id, role: 'owner' }],
+          createdAt: new Date().toISOString(), isDream: true,
+        }
+        await get().put('trips', trip, trip.id, u.id)
+        await get().del('dreams', d.id)
+      }
+    } finally {
+      migratingDreams = false
+    }
   },
 }))
 

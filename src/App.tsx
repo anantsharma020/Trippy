@@ -6,6 +6,9 @@ import AuthScreen from './pages/AuthScreen'
 import Home from './pages/Home'
 import Friends from './pages/Friends'
 import ProfilePage from './pages/ProfilePage'
+import WorldPage from './pages/WorldPage'
+import DreamsPage from './pages/DreamsPage'
+import DreamDetail from './pages/DreamDetail'
 import TripLayout from './pages/TripLayout'
 import Overview from './sections/Overview'
 import Itinerary from './sections/Itinerary'
@@ -26,6 +29,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/world" element={<WorldPage />} />
+      <Route path="/dreams" element={<DreamsPage />} />
+      <Route path="/dream/:id" element={<DreamDetail />} />
       <Route path="/friends" element={<Friends />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/trip/:id" element={<TripLayout />}>

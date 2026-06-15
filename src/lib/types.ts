@@ -69,6 +69,9 @@ export interface Trip {
   destinations: Destination[]
   members: TripMember[]
   createdAt: string
+  // A dream is a lightweight "draft trip": a destination you're collecting ideas
+  // for, with no dates yet. "Plan trip" flips this off and it becomes a real trip.
+  isDream?: boolean
 }
 
 // --- The flexible item ------------------------------------------------------

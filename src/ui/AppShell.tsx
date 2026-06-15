@@ -4,9 +4,10 @@ import { ChevronLeft, Users, User, LogOut, Plane } from 'lucide-react'
 import { useApp } from '../lib/db'
 import { signOut } from '../lib/auth'
 import { Avatar } from './primitives'
+import BottomNav from './BottomNav'
 
-export default function AppShell({ title, back, children, right }: {
-  title?: React.ReactNode; back?: string; children: React.ReactNode; right?: React.ReactNode
+export default function AppShell({ title, back, children, right, bottomNav }: {
+  title?: React.ReactNode; back?: string; children: React.ReactNode; right?: React.ReactNode; bottomNav?: boolean
 }) {
   const me = useApp((s) => s.me())
   const [menu, setMenu] = useState(false)
@@ -46,7 +47,8 @@ export default function AppShell({ title, back, children, right }: {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4 py-5">{children}</main>
+      <main className={`mx-auto max-w-3xl px-4 py-5 ${bottomNav ? 'pb-24' : ''}`}>{children}</main>
+      {bottomNav && <BottomNav />}
     </div>
   )
 }
