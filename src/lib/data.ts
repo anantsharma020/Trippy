@@ -1,7 +1,8 @@
 import { useApp } from './db'
 import { uid } from './util'
+import { PACKING_TEMPLATES } from './packingTemplates'
 import type {
-  ActionItem, Comment, Dream, Item, ItemCategory, PackingItem, Reaction,
+  ActionItem, Comment, Dream, Item, ItemCategory, PackingItem, PackTemplate, Reaction,
 } from './types'
 
 // Thin typed helpers over the generic store for the per-trip collections.
@@ -78,6 +79,36 @@ export function newPacking(tripId: string, partial: Partial<PackingItem> = {}): 
 export const savePacking = (p: PackingItem) => app().put('packing', p, p.tripId)
 export const deletePacking = (id: string) => app().del('packing', id)
 export const tripPacking = (tripId: string) => app().packing.filter((p) => p.tripId === tripId)
+
+// --- Packing templates (per-user, editable) ---------------------------------
+export const myTemplates = (): PackTemplate[] => {
+  const u = app().user
+  return app().packTemplates.filter((t) => t.userId === u?.id)
+}
+export const savePackTemplate = (t: PackTemplate) => app().put('packtemplates', t, null, t.userId)
+export const deletePackTemplate = (id: string) => app().del('packtemplates', id)
+export function newPackTemplate(name = ''): PackTemplate {
+  return { id: uid(), userId: app().user!.id, name, items: [] }
+}
+
+// Copy the built-in templates into the user's own editable library, once.
+// `seeding` guards against React StrictMode double-invoking the effect before
+// the first async write lands (which would create duplicates).
+let seeding = false
+export async function seedTemplates() {
+  const st = app()
+  const me = st.me()
+  if (!me || me.templatesSeeded || seeding || myTemplates().length > 0) return
+  seeding = true
+  try {
+    await st.updateProfile({ templatesSeeded: true }) // mark first so re-entry bails
+    for (const [name, items] of Object.entries(PACKING_TEMPLATES)) {
+      await st.put('packtemplates', { id: uid(), userId: me.id, name, items }, null, me.id)
+    }
+  } finally {
+    seeding = false
+  }
+}
 
 // --- Comments & reactions ---------------------------------------------------
 export const addComment = (itemId: string, body: string) => {

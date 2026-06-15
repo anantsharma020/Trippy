@@ -86,9 +86,17 @@ function BookingCard({ item, onOpen }: { item: Item; onOpen: () => void }) {
       </div>
       <div className="space-y-1">
         <Row label="Reference" value={b.reference} copy />
-        <Row label="Flight" value={b.flightNumber} />
-        {(b.fromCode || b.toCode) && <Row label="Route" value={[b.fromCode, b.toCode].filter(Boolean).join(' → ')} />}
-        <Row label="Seat" value={b.seat} />
+        {b.legs && b.legs.length > 0 ? (
+          <Row label={b.legs.length > 1 ? `Route (${b.legs.length} legs)` : 'Route'}
+            value={(() => {
+              const codes = [b.legs[0].fromCode, ...b.legs.map((l) => l.toCode)].filter(Boolean)
+              return codes.length ? codes.join(' → ') : b.legs.map((l) => l.flightNumber).filter(Boolean).join(', ')
+            })()} />
+        ) : <>
+          <Row label="Flight" value={b.flightNumber} />
+          {(b.fromCode || b.toCode) && <Row label="Route" value={[b.fromCode, b.toCode].filter(Boolean).join(' → ')} />}
+          <Row label="Seat" value={b.seat} />
+        </>}
         <Row label="Address" value={b.address} />
         <Row label="Check-in" value={b.checkIn || (item.startTime ? `${fmtDate(item.date)} ${item.startTime}` : undefined)} />
         <Row label="Check-out" value={b.checkOut} />

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, MapPin, Clock, ExternalLink, Calendar, Tag } from 'lucide-react'
+import { Pencil, MapPin, Clock, ExternalLink, Calendar, Tag, Plane } from 'lucide-react'
 import type { Item, Trip } from '../lib/types'
 import { CATEGORY_EMOJI, toggleReaction, itemReactions } from '../lib/data'
 import { useApp } from '../lib/db'
@@ -71,16 +71,39 @@ function ItemDetail({ trip, item, canEdit, onEdit, onClose }: {
 
         {item.notes && <p className="whitespace-pre-wrap rounded-xl bg-ink-850 px-3 py-2.5 text-sm text-slate-700">{item.notes}</p>}
 
+        {b.legs && b.legs.length > 0 && (
+          <div className="space-y-2">
+            {b.legs.map((leg, i) => (
+              <div key={leg.id} className="rounded-xl bg-ink-850 p-3 text-sm">
+                <div className="mb-1 flex items-center gap-2 text-slate-800">
+                  <Plane size={14} className="text-brand-500" />
+                  <span className="font-medium">{[leg.fromCode, leg.toCode].filter(Boolean).join(' → ') || `Leg ${i + 1}`}</span>
+                  {(leg.depTime || leg.arrTime) && <span className="text-slate-500">· {[leg.depTime, leg.arrTime].filter(Boolean).join('–')}</span>}
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
+                  {leg.airline && <span>{leg.airline}</span>}
+                  {leg.flightNumber && <span>{leg.flightNumber}</span>}
+                  {leg.seat && <span>Seat {leg.seat}</span>}
+                  {leg.baggage && <span>{leg.baggage}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div>
+          <Row label="Duration">{item.duration}</Row>
           <Row label="Priority">{item.priority}</Row>
           <Row label="Est. cost">{item.cost != null ? money(item.cost, item.currency || 'EUR') : ''}</Row>
           <Row label="Source">{item.source}</Row>
           <Row label="Provider">{b.provider}</Row>
           <Row label="Reference">{b.reference}</Row>
-          <Row label="Flight">{b.flightNumber}</Row>
-          <Row label="Route">{(b.fromCode || b.toCode) ? [b.fromCode, b.toCode].filter(Boolean).join(' → ') : ''}</Row>
-          <Row label="Seat">{b.seat}</Row>
-          <Row label="Baggage">{b.baggage}</Row>
+          {!b.legs?.length && <>
+            <Row label="Flight">{b.flightNumber}</Row>
+            <Row label="Route">{(b.fromCode || b.toCode) ? [b.fromCode, b.toCode].filter(Boolean).join(' → ') : ''}</Row>
+            <Row label="Seat">{b.seat}</Row>
+            <Row label="Baggage">{b.baggage}</Row>
+          </>}
           <Row label="Address">{b.address}</Row>
           <Row label="Check-in">{b.checkIn}</Row>
           <Row label="Check-out">{b.checkOut}</Row>

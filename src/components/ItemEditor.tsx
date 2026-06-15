@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Trash2, MapPin, Calendar, X } from 'lucide-react'
-import { ITEM_CATEGORIES, type Item, type Trip, type ItemCategory } from '../lib/types'
+import { Trash2, MapPin, Calendar, X, Plus, Plane } from 'lucide-react'
+import { ITEM_CATEGORIES, type BookingDetails, type FlightLeg, type Item, type Trip, type ItemCategory } from '../lib/types'
 import { saveItem, deleteItem, BOOKABLE_CATS, CATEGORY_EMOJI } from '../lib/data'
 import { useApp } from '../lib/db'
+import { uid } from '../lib/util'
 import { Modal, Field, Input, Textarea, Select, Button, Avatar } from '../ui/primitives'
 import LocationSearch from './LocationSearch'
 
@@ -20,6 +21,8 @@ export default function ItemEditor({ trip, item, onClose }: {
 
   const memberIds = [trip.ownerId, ...trip.members.map((m) => m.userId)].filter((v, i, a) => a.indexOf(v) === i)
   const showBooking = BOOKABLE_CATS.includes(d.category) || d.bookingStatus !== 'None'
+  const isAccom = d.category === 'Accommodation'
+  const isFlight = d.category === 'Flight'
 
   async function save() {
     if (!d.title.trim()) return
@@ -60,22 +63,36 @@ export default function ItemEditor({ trip, item, onClose }: {
         {/* Scheduling — adding a date moves this into the Itinerary */}
         <div className="rounded-xl bg-ink-850/60 ring-1 ring-ink-800 p-3">
           <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-400">
-            <Calendar size={14} /> Scheduling {d.date ? <span className="text-brand-400">· in itinerary</span> : <span className="text-slate-500">· in ideas</span>}
+            <Calendar size={14} /> {isAccom ? 'Stay dates' : 'Scheduling'} {d.date ? <span className="text-brand-400">· in itinerary</span> : <span className="text-slate-500">· in ideas</span>}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Date"><Input type="date" value={d.date || ''} onChange={(e) => set({ date: e.target.value || undefined })} /></Field>
-            <Field label="End date (multi-day)"><Input type="date" value={d.endDate || ''} onChange={(e) => set({ endDate: e.target.value || undefined })} /></Field>
-            <Field label="Rough time">
-              <Select value={d.roughTime || ''} onChange={(e) => set({ roughTime: (e.target.value || undefined) as any })}>
-                <option value="">—</option>
-                {ROUGH.map((r) => <option key={r} value={r}>{r}</option>)}
-              </Select>
-            </Field>
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="Start"><Input type="time" value={d.startTime || ''} onChange={(e) => set({ startTime: e.target.value || undefined })} /></Field>
-              <Field label="End"><Input type="time" value={d.endTime || ''} onChange={(e) => set({ endTime: e.target.value || undefined })} /></Field>
+          {isAccom ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Check-in date"><Input type="date" value={d.date || ''} onChange={(e) => set({ date: e.target.value || undefined })} /></Field>
+              <Field label="Check-in time"><Input type="time" value={d.startTime || ''} onChange={(e) => set({ startTime: e.target.value || undefined })} /></Field>
+              <Field label="Check-out date"><Input type="date" value={d.endDate || ''} onChange={(e) => set({ endDate: e.target.value || undefined })} /></Field>
+              <Field label="Check-out time"><Input type="time" value={d.endTime || ''} onChange={(e) => set({ endTime: e.target.value || undefined })} /></Field>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Date"><Input type="date" value={d.date || ''} onChange={(e) => set({ date: e.target.value || undefined })} /></Field>
+                <Field label="End date (multi-day)"><Input type="date" value={d.endDate || ''} onChange={(e) => set({ endDate: e.target.value || undefined })} /></Field>
+                <Field label="Rough time">
+                  <Select value={d.roughTime || ''} onChange={(e) => set({ roughTime: (e.target.value || undefined) as any })}>
+                    <option value="">—</option>
+                    {ROUGH.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </Select>
+                </Field>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Start"><Input type="time" value={d.startTime || ''} onChange={(e) => set({ startTime: e.target.value || undefined })} /></Field>
+                  <Field label="End"><Input type="time" value={d.endTime || ''} onChange={(e) => set({ endTime: e.target.value || undefined })} /></Field>
+                </div>
+              </div>
+              <Field label="Duration" hint="approximate — e.g. 2-3 hours">
+                <Input value={d.duration || ''} onChange={(e) => set({ duration: e.target.value || undefined })} placeholder="2-3 hours" />
+              </Field>
+            </>
+          )}
           {d.date && (
             <button onClick={() => set({ date: undefined, startTime: undefined, endTime: undefined, roughTime: undefined, endDate: undefined })}
               className="mt-2 text-xs text-slate-400 hover:text-slate-900">↩ Move back to Ideas (clear date)</button>
@@ -114,15 +131,9 @@ export default function ItemEditor({ trip, item, onClose }: {
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="Provider"><Input value={d.booking?.provider || ''} onChange={(e) => set({ booking: { ...d.booking, provider: e.target.value } })} placeholder="Airline / hotel / co." /></Field>
               <Field label="Reference"><Input value={d.booking?.reference || ''} onChange={(e) => set({ booking: { ...d.booking, reference: e.target.value } })} placeholder="Confirmation #" /></Field>
-              {d.category === 'Flight' && <>
-                <Field label="Flight no."><Input value={d.booking?.flightNumber || ''} onChange={(e) => set({ booking: { ...d.booking, flightNumber: e.target.value } })} /></Field>
-                <div className="grid grid-cols-2 gap-2">
-                  <Field label="From"><Input value={d.booking?.fromCode || ''} onChange={(e) => set({ booking: { ...d.booking, fromCode: e.target.value.toUpperCase() } })} placeholder="HND" /></Field>
-                  <Field label="To"><Input value={d.booking?.toCode || ''} onChange={(e) => set({ booking: { ...d.booking, toCode: e.target.value.toUpperCase() } })} placeholder="ITM" /></Field>
-                </div>
-                <Field label="Seat"><Input value={d.booking?.seat || ''} onChange={(e) => set({ booking: { ...d.booking, seat: e.target.value } })} /></Field>
-                <Field label="Baggage"><Input value={d.booking?.baggage || ''} onChange={(e) => set({ booking: { ...d.booking, baggage: e.target.value } })} /></Field>
-              </>}
+              {isFlight && (
+                <div className="sm:col-span-2"><FlightLegs booking={d.booking} onChange={(b) => set({ booking: b })} /></div>
+              )}
               {(d.category === 'Accommodation') && <>
                 <Field label="Address"><Input value={d.booking?.address || ''} onChange={(e) => set({ booking: { ...d.booking, address: e.target.value } })} /></Field>
                 <Field label="Contact"><Input value={d.booking?.contact || ''} onChange={(e) => set({ booking: { ...d.booking, contact: e.target.value } })} /></Field>
@@ -167,5 +178,42 @@ export default function ItemEditor({ trip, item, onClose }: {
         </div>
       </div>
     </Modal>
+  )
+}
+
+// Multi-leg flight editor — one block per segment, for layovers.
+function FlightLegs({ booking, onChange }: { booking?: BookingDetails; onChange: (b: BookingDetails) => void }) {
+  const legs: FlightLeg[] = booking?.legs?.length
+    ? booking.legs
+    : [{ id: uid(), flightNumber: booking?.flightNumber, fromCode: booking?.fromCode, toCode: booking?.toCode, seat: booking?.seat, baggage: booking?.baggage }]
+  const setLegs = (next: FlightLeg[]) => onChange({ ...booking, legs: next })
+  const update = (id: string, patch: Partial<FlightLeg>) => setLegs(legs.map((l) => (l.id === id ? { ...l, ...patch } : l)))
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400"><Plane size={13} />Flights / legs</div>
+      <div className="space-y-2">
+        {legs.map((leg, i) => (
+          <div key={leg.id} className="rounded-xl bg-ink-850 ring-1 ring-ink-700 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500">Leg {i + 1}</span>
+              {legs.length > 1 && <button type="button" onClick={() => setLegs(legs.filter((l) => l.id !== leg.id))} className="text-slate-400 hover:text-rose-500"><X size={14} /></button>}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Airline"><Input value={leg.airline || ''} onChange={(e) => update(leg.id, { airline: e.target.value })} placeholder="ANA" /></Field>
+              <Field label="Flight no."><Input value={leg.flightNumber || ''} onChange={(e) => update(leg.id, { flightNumber: e.target.value })} placeholder="NH212" /></Field>
+              <Field label="From"><Input value={leg.fromCode || ''} onChange={(e) => update(leg.id, { fromCode: e.target.value.toUpperCase() })} placeholder="HND" /></Field>
+              <Field label="To"><Input value={leg.toCode || ''} onChange={(e) => update(leg.id, { toCode: e.target.value.toUpperCase() })} placeholder="HEL" /></Field>
+              <Field label="Depart"><Input type="time" value={leg.depTime || ''} onChange={(e) => update(leg.id, { depTime: e.target.value })} /></Field>
+              <Field label="Arrive"><Input type="time" value={leg.arrTime || ''} onChange={(e) => update(leg.id, { arrTime: e.target.value })} /></Field>
+              <Field label="Seat"><Input value={leg.seat || ''} onChange={(e) => update(leg.id, { seat: e.target.value })} placeholder="32A" /></Field>
+              <Field label="Baggage"><Input value={leg.baggage || ''} onChange={(e) => update(leg.id, { baggage: e.target.value })} placeholder="23kg" /></Field>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={() => setLegs([...legs, { id: uid() }])}
+        className="mt-2 flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-700"><Plus size={15} />Add leg (layover)</button>
+    </div>
   )
 }

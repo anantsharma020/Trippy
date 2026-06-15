@@ -37,8 +37,11 @@ export default function LocationSearch({ placeholder = 'Search a place…', onPi
           {loading && <div className="px-3 py-3 text-sm text-slate-500">Searching…</div>}
           {!loading && results.length === 0 && <div className="px-3 py-3 text-sm text-slate-500">No matches</div>}
           {results.map((r, i) => (
-            <button key={i} type="button" onClick={() => { onPick(r); setQ(''); setResults([]); setOpen(false) }}
-              className="flex w-full items-start gap-2 px-3 py-2.5 text-left hover:bg-ink-800">
+            <button key={i} type="button"
+              // Use pointerdown (not click): on touch keyboards the input blur can
+              // swallow the click before it registers. preventDefault keeps focus.
+              onPointerDown={(e) => { e.preventDefault(); onPick(r); setQ(''); setResults([]); setOpen(false) }}
+              className="flex w-full items-start gap-2 px-3 py-3 text-left hover:bg-ink-800">
               <MapPin size={15} className="mt-0.5 text-brand-500 shrink-0" />
               <span className="min-w-0">
                 <span className="block truncate text-sm text-slate-800">{r.name}</span>

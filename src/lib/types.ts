@@ -19,6 +19,15 @@ export interface Profile {
   email?: string
   photoUrl?: string
   homeCurrency: string // ISO 4217, defaults to EUR
+  templatesSeeded?: boolean // have the default packing templates been copied in?
+}
+
+// A user-owned, editable packing template.
+export interface PackTemplate {
+  id: ID
+  userId: ID
+  name: string
+  items: { title: string; category: PackingCategory; quantity?: number }[]
 }
 
 export type FriendStatus = 'pending' | 'accepted'
@@ -105,6 +114,7 @@ export interface Item {
   startTime?: string // HH:mm
   endTime?: string // HH:mm
   endDate?: string // for multi-day items
+  duration?: string // approximate, free-form e.g. "2-3 hours"
   // travel-details payload (flights/hotels/cars/etc.)
   bookingStatus: BookingStatus
   booking?: BookingDetails
@@ -113,16 +123,31 @@ export interface Item {
   createdAt: string
 }
 
+// A single flight segment (for multi-leg itineraries with layovers).
+export interface FlightLeg {
+  id: ID
+  airline?: string
+  flightNumber?: string
+  fromCode?: string
+  toCode?: string
+  date?: string
+  depTime?: string
+  arrTime?: string
+  seat?: string
+  baggage?: string
+}
+
 // Structured confirmation details for the Travel Details section.
 export interface BookingDetails {
   provider?: string // airline / hotel / rental company / platform
   reference?: string // booking reference / confirmation number
-  // flight
+  // flight (single-leg quick fields, or use `legs` for layovers)
   flightNumber?: string
   fromCode?: string
   toCode?: string
   seat?: string
   baggage?: string
+  legs?: FlightLeg[]
   // accommodation / car
   address?: string
   checkIn?: string

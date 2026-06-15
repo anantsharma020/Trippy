@@ -44,6 +44,7 @@ export default function ItemCard({ item, trip, onOpen, showSchedule = true }: {
             <span>{item.category}</span>
             {item.city && <span className="flex items-center gap-1"><MapPin size={12} />{item.city}</span>}
             {showSchedule && item.date && <span className="flex items-center gap-1 text-brand-300"><Clock size={12} />{scheduleLabel(item)}</span>}
+            {item.duration && <span className="flex items-center gap-1"><Clock size={12} />{item.duration}</span>}
             {item.cost != null && <span>{money(item.cost, item.currency || 'EUR')}</span>}
             {item.bookingStatus === 'Booked' && <Chip className="bg-emerald-500/15 text-emerald-300">Booked</Chip>}
             {item.bookingStatus === 'Need to book' && <Chip className="bg-amber-500/15 text-amber-300">Book</Chip>}

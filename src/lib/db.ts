@@ -5,12 +5,12 @@ import { isCloud } from './supabase'
 import { uid } from './util'
 import type {
   ActionItem, Comment, Dream, Friend, Item, MemberRole, PackingItem,
-  Profile, Reaction, Trip,
+  PackTemplate, Profile, Reaction, Trip,
 } from './types'
 
 type Coll =
   | 'profiles' | 'friends' | 'trips' | 'items'
-  | 'actions' | 'packing' | 'comments' | 'reactions' | 'dreams'
+  | 'actions' | 'packing' | 'comments' | 'reactions' | 'dreams' | 'packtemplates'
 
 interface AppState {
   ready: boolean
@@ -24,6 +24,7 @@ interface AppState {
   comments: Comment[]
   reactions: Reaction[]
   dreams: Dream[]
+  packTemplates: PackTemplate[]
 
   init: () => Promise<void>
   refresh: () => Promise<void>
@@ -62,7 +63,7 @@ export const useApp = create<AppState>((set, get) => ({
   ready: false,
   user: null,
   profiles: [], friends: [], trips: [], items: [],
-  actions: [], packing: [], comments: [], reactions: [], dreams: [],
+  actions: [], packing: [], comments: [], reactions: [], dreams: [], packTemplates: [],
 
   setUser: (u) => set({ user: u }),
 
@@ -91,6 +92,7 @@ export const useApp = create<AppState>((set, get) => ({
       comments: group(docs, 'comments'),
       reactions: group(docs, 'reactions'),
       dreams: group(docs, 'dreams'),
+      packTemplates: group(docs, 'packtemplates'),
     })
   },
 

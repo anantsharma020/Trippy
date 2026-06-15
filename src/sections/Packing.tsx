@@ -1,10 +1,12 @@
-import { useState } from 'react'
-import { Plus, Luggage, Trash2, Sparkles, Check } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Plus, Luggage, Trash2, Sparkles, Check, Pencil, X } from 'lucide-react'
 import { useTrip } from '../pages/TripLayout'
 import { useApp } from '../lib/db'
-import { tripPacking, newPacking, savePacking, deletePacking } from '../lib/data'
-import { PACKING_CATEGORIES, type PackingCategory, type PackingItem } from '../lib/types'
-import { PACKING_TEMPLATES } from '../lib/packingTemplates'
+import {
+  tripPacking, newPacking, savePacking, deletePacking,
+  myTemplates, savePackTemplate, deletePackTemplate, newPackTemplate, seedTemplates,
+} from '../lib/data'
+import { PACKING_CATEGORIES, type PackingCategory, type PackingItem, type PackTemplate } from '../lib/types'
 import { Button, Input, Select, Modal, EmptyState, Chip } from '../ui/primitives'
 import { classNames } from '../lib/util'
 
@@ -76,21 +78,69 @@ export default function Packing() {
 }
 
 function TemplatePicker({ trip, onClose }: { trip: any; onClose: () => void }) {
-  async function apply(name: string) {
-    for (const t of PACKING_TEMPLATES[name]) {
-      await savePacking(newPacking(trip.id, { title: t.title, category: t.category, quantity: t.quantity || 1 }))
-    }
+  useApp((s) => s.packTemplates)
+  const templates = myTemplates()
+  const [editing, setEditing] = useState<PackTemplate | null>(null)
+
+  // Copy the built-in templates into the user's editable library on first open.
+  useEffect(() => { seedTemplates() }, [])
+
+  async function apply(t: PackTemplate) {
+    for (const it of t.items) await savePacking(newPacking(trip.id, { title: it.title, category: it.category, quantity: it.quantity || 1 }))
     onClose()
   }
+
+  if (editing) return <TemplateEditor template={editing} onClose={() => setEditing(null)} />
+
   return (
     <Modal open onClose={onClose} title="Packing templates">
-      <p className="mb-3 text-sm text-slate-400">Add a ready-made checklist. You can edit or remove anything afterwards.</p>
-      <div className="grid grid-cols-2 gap-2">
-        {Object.keys(PACKING_TEMPLATES).map((name) => (
-          <button key={name} onClick={() => apply(name)} className="rounded-xl bg-ink-850 ring-1 ring-ink-700 px-3 py-3 text-left text-sm font-medium text-slate-200 hover:ring-brand-500">
-            {name}<div className="text-xs font-normal text-slate-500">{PACKING_TEMPLATES[name].length} items</div>
-          </button>
+      <p className="mb-3 text-sm text-slate-500">Your templates — tap to add to this trip. Edit or delete to make them your own.</p>
+      <div className="space-y-2">
+        {templates.map((t) => (
+          <div key={t.id} className="flex items-center gap-2 rounded-xl bg-ink-850 ring-1 ring-ink-700 px-3 py-2.5">
+            <button onClick={() => apply(t)} className="min-w-0 flex-1 text-left">
+              <span className="block truncate text-sm font-medium text-slate-900">{t.name || 'Untitled'}</span>
+              <span className="text-xs text-slate-500">{t.items.length} items · tap to add</span>
+            </button>
+            <button onClick={() => setEditing(t)} className="rounded-lg p-1.5 text-slate-400 hover:bg-ink-800 hover:text-brand-600"><Pencil size={15} /></button>
+            <button onClick={() => deletePackTemplate(t.id)} className="rounded-lg p-1.5 text-slate-400 hover:bg-ink-800 hover:text-rose-500"><Trash2 size={15} /></button>
+          </div>
         ))}
+      </div>
+      <Button variant="soft" size="sm" className="mt-3" onClick={() => setEditing(newPackTemplate())}><Plus size={15} />New template</Button>
+    </Modal>
+  )
+}
+
+function TemplateEditor({ template, onClose }: { template: PackTemplate; onClose: () => void }) {
+  const [t, setT] = useState<PackTemplate>(template)
+  const isNew = !useApp.getState().packTemplates.some((x) => x.id === template.id)
+  const setItem = (idx: number, patch: Partial<PackTemplate['items'][number]>) =>
+    setT((p) => ({ ...p, items: p.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) }))
+
+  return (
+    <Modal open onClose={onClose} title={isNew ? 'New template' : 'Edit template'}>
+      <div className="space-y-3">
+        <Input value={t.name} onChange={(e) => setT({ ...t, name: e.target.value })} placeholder="Template name (e.g. Ski trip)" />
+        <div className="space-y-2">
+          {t.items.map((it, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Input value={it.title} onChange={(e) => setItem(i, { title: e.target.value })} placeholder="Item" className="flex-1" />
+              <Select value={it.category} onChange={(e) => setItem(i, { category: e.target.value as PackingCategory })} className="w-auto py-1.5 text-sm">
+                {PACKING_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              </Select>
+              <button onClick={() => setT({ ...t, items: t.items.filter((_, x) => x !== i) })} className="text-slate-400 hover:text-rose-500"><X size={15} /></button>
+            </div>
+          ))}
+        </div>
+        <Button variant="soft" size="sm" onClick={() => setT({ ...t, items: [...t.items, { title: '', category: 'Miscellaneous' }] })}><Plus size={14} />Add item</Button>
+        <div className="flex items-center gap-2 border-t border-ink-800 pt-3">
+          {!isNew && <Button variant="ghost" className="text-rose-400" onClick={async () => { await deletePackTemplate(t.id); onClose() }}><Trash2 size={16} /></Button>}
+          <div className="ml-auto flex gap-2">
+            <Button variant="soft" onClick={onClose}>Cancel</Button>
+            <Button disabled={!t.name.trim()} onClick={async () => { await savePackTemplate({ ...t, items: t.items.filter((it) => it.title.trim()) }); onClose() }}>Save</Button>
+          </div>
+        </div>
       </div>
     </Modal>
   )
