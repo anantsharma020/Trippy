@@ -56,8 +56,10 @@ export async function signUp(name: string, email: string, password: string): Pro
       email, password, options: { data: { name } },
     })
     if (error) throw error
-    if (!data.user) throw new Error('Check your email to confirm your account, then sign in.')
-    return { id: data.user.id, email, name }
+    // With email confirmation ON, signUp returns a user but no session — the
+    // account isn't usable until confirmed. Surface that instead of failing silently.
+    if (!data.session) throw new Error('Account created, but email confirmation is on. Confirm via the email link, then Sign in — or ask the owner to disable email confirmation in Supabase.')
+    return { id: data.user!.id, email, name }
   }
   const creds = readCreds()
   const key = email.toLowerCase()
