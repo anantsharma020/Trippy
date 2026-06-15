@@ -20,6 +20,7 @@ export interface Profile {
   photoUrl?: string
   homeCurrency: string // ISO 4217, defaults to EUR
   templatesSeeded?: boolean // have the default packing templates been copied in?
+  visitedCountries?: string[] // manually-marked ISO alpha-2 codes
 }
 
 // A user-owned, editable packing template.
@@ -101,6 +102,7 @@ export interface Item {
   city?: string
   // free-form location label; lat/lng power the map
   locationLabel?: string
+  address?: string // full address line (from the location search)
   lat?: number
   lng?: number
   notes?: string

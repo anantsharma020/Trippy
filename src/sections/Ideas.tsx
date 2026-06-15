@@ -106,7 +106,12 @@ function Grouped({ items, view, trip, onOpen, profile }: {
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(i)
     })
-    return [...map.entries()]
+    const entries = [...map.entries()]
+    if (view === 'priority') {
+      const order = ['High', 'Medium', 'Low', 'No priority']
+      entries.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]))
+    }
+    return entries
   }, [items, view, profile])
 
   return (

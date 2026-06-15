@@ -48,7 +48,11 @@ export default function Overview() {
   const bookings = items.filter((i) => i.bookingStatus === 'Booked')
   const packed = packing.filter((p) => p.packed).length
 
-  const partners = [trip.ownerId, ...trip.members.map((m) => m.userId)].filter((v, i, a) => a.indexOf(v) === i).map((id) => profile(id)?.name).filter(Boolean) as string[]
+  const me = useApp((s) => s.user)
+  const memberIds = [trip.ownerId, ...trip.members.map((m) => m.userId)].filter((v, i, a) => a.indexOf(v) === i)
+  const partners = memberIds.map((id) => profile(id)?.name).filter(Boolean) as string[]
+  // Everyone on the trip except the person viewing it.
+  const others = memberIds.filter((id) => id !== me?.id).map((id) => profile(id)?.name).filter(Boolean) as string[]
   const currencies = trip.destinations.map((d) => currencyForDestination(d)).filter(Boolean) as string[]
 
   return (
@@ -69,7 +73,7 @@ export default function Overview() {
         {partners.length > 0 && (
           <div className="mt-3 flex items-center gap-2">
             <AvatarStack names={partners} />
-            <span className="text-sm text-slate-400">{partners.length > 1 ? `Traveling with ${partners.slice(1).join(', ')}` : 'Solo trip'}</span>
+            <span className="text-sm text-slate-400">{others.length > 0 ? `Traveling with ${others.join(', ')}` : 'Solo trip'}</span>
           </div>
         )}
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">

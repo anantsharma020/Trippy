@@ -13,6 +13,9 @@ export default function LocationSearch({ placeholder = 'Search a place…', onPi
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const timer = useRef<number>()
+  const down = useRef<{ x: number; y: number } | null>(null)
+
+  const choose = (r: GeoResult) => { onPick(r); setQ(''); setResults([]); setOpen(false) }
 
   useEffect(() => {
     window.clearTimeout(timer.current)
@@ -33,14 +36,18 @@ export default function LocationSearch({ placeholder = 'Search a place…', onPi
           placeholder={placeholder} className="pl-9" />
       </div>
       {open && (q.trim().length >= 2) && (
-        <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl bg-ink-850 ring-1 ring-ink-700 shadow-xl">
+        <div className="absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-xl bg-ink-850 ring-1 ring-ink-700 shadow-xl">
           {loading && <div className="px-3 py-3 text-sm text-slate-500">Searching…</div>}
           {!loading && results.length === 0 && <div className="px-3 py-3 text-sm text-slate-500">No matches</div>}
           {results.map((r, i) => (
             <button key={i} type="button"
-              // Use pointerdown (not click): on touch keyboards the input blur can
-              // swallow the click before it registers. preventDefault keeps focus.
-              onPointerDown={(e) => { e.preventDefault(); onPick(r); setQ(''); setResults([]); setOpen(false) }}
+              // Select on pointer-up only if it was a tap, not a scroll/drag — so
+              // swiping through the list doesn't instantly pick an item.
+              onPointerDown={(e) => { down.current = { x: e.clientX, y: e.clientY } }}
+              onPointerUp={(e) => {
+                const d = down.current; down.current = null
+                if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 12) choose(r)
+              }}
               className="flex w-full items-start gap-2 px-3 py-3 text-left hover:bg-ink-800">
               <MapPin size={15} className="mt-0.5 text-brand-500 shrink-0" />
               <span className="min-w-0">

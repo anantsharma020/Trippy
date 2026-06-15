@@ -160,19 +160,30 @@ function MapDay({ trip, days, itemsByDay, mapDay, setMapDay, ideas, showNearby, 
   trip: any; days: string[]; itemsByDay: (d: string) => Item[]; mapDay: string; setMapDay: (d: string) => void
   ideas: Item[]; showNearby: boolean; setShowNearby: (v: boolean) => void
 }) {
-  const dayItems = itemsByDay(mapDay)
-  const points: MapPoint[] = dayItems.map((i, idx) => ({
-    id: i.id, lat: i.lat!, lng: i.lng!, label: i.title, sub: scheduleLabel(i) || i.category,
-    number: i.category === 'Accommodation' ? undefined : idx + 1,
-    emoji: i.category === 'Accommodation' ? '🏨' : undefined,
-    color: i.category === 'Accommodation' ? '#f59e0b' : '#8b5cf6',
-  }))
+  const allDays = mapDay === 'all'
+  // In "all days" mode each pin is numbered by the day it falls on.
+  const dayIndex = new Map(days.map((d, i) => [d, i + 1]))
+  const dayItems = allDays
+    ? days.flatMap((d) => itemsByDay(d))
+    : itemsByDay(mapDay)
+  const points: MapPoint[] = dayItems.map((i, idx) => {
+    const isAccom = i.category === 'Accommodation'
+    const num = allDays ? (i.date ? dayIndex.get(i.date) : undefined) : (isAccom ? undefined : idx + 1)
+    return {
+      id: i.id, lat: i.lat!, lng: i.lng!, label: i.title,
+      sub: scheduleLabel(i) || i.category,
+      number: isAccom && !allDays ? undefined : num,
+      emoji: isAccom && !allDays ? '🏨' : undefined,
+      color: isAccom ? '#f59e0b' : '#8b5cf6',
+    }
+  })
   if (showNearby) ideas.forEach((i) => points.push({ id: 'idea-' + i.id, lat: i.lat!, lng: i.lng!, label: i.title, sub: 'Idea', emoji: CATEGORY_EMOJI[i.category], color: '#64748b' }))
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Select value={mapDay} onChange={(e) => setMapDay(e.target.value)} className="w-auto py-1.5 text-sm">
+          <option value="all">All days</option>
           {days.map((d, i) => <option key={d} value={d}>Day {i + 1} · {fmtDate(d, 'EEE, MMM d')}</option>)}
         </Select>
         <button onClick={() => setShowNearby(!showNearby)}><Chip active={showNearby}>Nearby ideas</Chip></button>

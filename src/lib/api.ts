@@ -20,14 +20,14 @@ async function cachedJSON(url: string, ttlMs: number): Promise<any> {
 
 // --- Geocoding --------------------------------------------------------------
 export interface GeoResult {
-  name: string; detail?: string; country?: string; countryCode?: string; admin1?: string; latitude: number; longitude: number
+  name: string; detail?: string; address?: string; country?: string; countryCode?: string; admin1?: string; latitude: number; longitude: number
 }
 
 // Nominatim (OpenStreetMap) handles full POI / address / venue search — e.g.
 // "Ramen Nagi", "Kyoto Station", "Lofoten" — not just city names.
 export async function geocode(query: string): Promise<GeoResult[]> {
   if (query.trim().length < 2) return []
-  const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&accept-language=en&limit=6&q=${encodeURIComponent(query)}`
+  const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&accept-language=en&limit=10&q=${encodeURIComponent(query)}`
   const data = await cachedJSON(url, 1000 * 60 * 60 * 24 * 30)
   return (Array.isArray(data) ? data : []).map((r: any) => {
     const a = r.address || {}
@@ -36,6 +36,7 @@ export async function geocode(query: string): Promise<GeoResult[]> {
     return {
       name,
       detail: place || r.display_name,
+      address: r.display_name, // full address line
       country: a.country,
       countryCode: a.country_code ? String(a.country_code).toUpperCase() : undefined,
       admin1: a.state,

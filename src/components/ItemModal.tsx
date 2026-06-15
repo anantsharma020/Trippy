@@ -72,11 +72,16 @@ function ItemDetail({ trip, item, canEdit, onEdit, onClose }: {
         )}
 
         {(item.locationLabel || item.city) && (
-          <a href={mapsUrl(item)} target="_blank" rel="noreferrer"
-            className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700">
-            <MapPin size={15} className="text-brand-500" />{item.locationLabel || item.city}
-            <ExternalLink size={13} className="opacity-70" />
-          </a>
+          <div>
+            <a href={mapsUrl(item)} target="_blank" rel="noreferrer"
+              className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-700">
+              <MapPin size={15} className="text-brand-500" />{item.locationLabel || item.city}
+              <ExternalLink size={13} className="opacity-70" />
+            </a>
+            {item.address && item.address !== item.locationLabel && (
+              <p className="mt-0.5 pl-6 text-xs text-slate-500">{item.address}</p>
+            )}
+          </div>
         )}
 
         {item.notes && <p className="whitespace-pre-wrap rounded-xl bg-ink-850 px-3 py-2.5 text-sm text-slate-700">{item.notes}</p>}
@@ -114,7 +119,7 @@ function ItemDetail({ trip, item, canEdit, onEdit, onClose }: {
             <Row label="Seat">{b.seat}</Row>
             <Row label="Baggage">{b.baggage}</Row>
           </>}
-          <Row label="Address">{b.address}</Row>
+          <Row label="Address">{b.address || item.address}</Row>
           {item.category === 'Accommodation' ? <>
             <Row label="Check-in">{item.date ? `${fmtDate(item.date, 'EEE, MMM d')}${item.startTime ? ` · ${item.startTime}` : ''}` : ''}</Row>
             <Row label="Check-out">{item.endDate ? `${fmtDate(item.endDate, 'EEE, MMM d')}${item.endTime ? ` · ${item.endTime}` : ''}` : ''}</Row>

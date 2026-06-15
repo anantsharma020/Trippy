@@ -36,9 +36,9 @@ export default function ItemCard({ item, trip, onOpen, showSchedule = true }: {
       <button onClick={() => onOpen(item)} className="flex w-full items-start gap-3 p-3 text-left">
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ink-800 text-lg">{CATEGORY_EMOJI[item.category]}</div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-2">
+          <div className="flex min-w-0 items-start gap-2">
             <p className="min-w-0 flex-1 truncate font-medium text-slate-100">{item.title || 'Untitled'}</p>
-            {item.priority === 'High' && <Chip className="bg-rose-500/15 text-rose-300">High</Chip>}
+            {item.priority === 'High' && <Chip className="shrink-0 bg-rose-500/15 text-rose-300">High</Chip>}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
             <span>{item.category}</span>

@@ -3,7 +3,7 @@ import { Trash2, MapPin, Calendar, X, Plus, Plane } from 'lucide-react'
 import { ITEM_CATEGORIES, type BookingDetails, type FlightLeg, type Item, type Trip, type ItemCategory } from '../lib/types'
 import { saveItem, deleteItem, BOOKABLE_CATS, CATEGORY_EMOJI } from '../lib/data'
 import { useApp } from '../lib/db'
-import { uid } from '../lib/util'
+import { uid, durationBetween } from '../lib/util'
 import { Modal, Field, Input, Textarea, Select, Button, Avatar } from '../ui/primitives'
 import LocationSearch from './LocationSearch'
 
@@ -17,6 +17,13 @@ export default function ItemEditor({ trip, item, onClose }: {
   const [d, setD] = useState<Item>(item)
   const profile = useApp((s) => s.profile)
   const set = (patch: Partial<Item>) => setD((prev) => ({ ...prev, ...patch }))
+  // Setting a start/end time auto-fills the duration from the gap.
+  const setTime = (field: 'startTime' | 'endTime', value: string) =>
+    setD((prev) => {
+      const next = { ...prev, [field]: value || undefined }
+      const dur = durationBetween(next.startTime, next.endTime)
+      return { ...next, duration: dur ?? next.duration }
+    })
   const isNew = !useApp.getState().items.some((i) => i.id === item.id)
 
   const memberIds = [trip.ownerId, ...trip.members.map((m) => m.userId)].filter((v, i, a) => a.indexOf(v) === i)
@@ -58,7 +65,8 @@ export default function ItemEditor({ trip, item, onClose }: {
               </div>
             )}
             <LocationSearch placeholder={d.lat != null ? 'Change location…' : 'Search address or place…'} onPick={(r) =>
-              set({ lat: r.latitude, lng: r.longitude, locationLabel: r.name, city: r.name })} />
+              set({ lat: r.latitude, lng: r.longitude, locationLabel: r.name, address: r.address, city: r.name })} />
+            {d.address && d.address !== d.locationLabel && <p className="mt-1 text-xs text-slate-500">{d.address}</p>}
           </Field>
         )}
 
@@ -86,11 +94,11 @@ export default function ItemEditor({ trip, item, onClose }: {
                   </Select>
                 </Field>
                 <div className="grid grid-cols-2 gap-2">
-                  <Field label="Start"><Input type="time" value={d.startTime || ''} onChange={(e) => set({ startTime: e.target.value || undefined })} /></Field>
-                  <Field label="End"><Input type="time" value={d.endTime || ''} onChange={(e) => set({ endTime: e.target.value || undefined })} /></Field>
+                  <Field label="Start"><Input type="time" value={d.startTime || ''} onChange={(e) => setTime('startTime', e.target.value)} /></Field>
+                  <Field label="End"><Input type="time" value={d.endTime || ''} onChange={(e) => setTime('endTime', e.target.value)} /></Field>
                 </div>
               </div>
-              <Field label="Duration" hint="approximate — e.g. 2-3 hours">
+              <Field label="Duration" hint="auto-filled from start/end times, or type your own — e.g. 2-3 hours">
                 <Input value={d.duration || ''} onChange={(e) => set({ duration: e.target.value || undefined })} placeholder="2-3 hours" />
               </Field>
             </>
@@ -141,10 +149,9 @@ export default function ItemEditor({ trip, item, onClose }: {
                 <div className="sm:col-span-2"><FlightLegs booking={d.booking} onChange={(b) => set({ booking: b })} /></div>
               )}
               {(d.category === 'Accommodation') && <>
-                <Field label="Address"><Input value={d.booking?.address || ''} onChange={(e) => set({ booking: { ...d.booking, address: e.target.value } })} /></Field>
                 <Field label="Contact"><Input value={d.booking?.contact || ''} onChange={(e) => set({ booking: { ...d.booking, contact: e.target.value } })} /></Field>
                 <Field label="Cancellation by"><Input type="date" value={d.booking?.cancellationDeadline || ''} onChange={(e) => set({ booking: { ...d.booking, cancellationDeadline: e.target.value } })} /></Field>
-                <div className="sm:col-span-2 text-xs text-slate-500">Check-in / check-out times are set under <span className="font-medium text-slate-700">Stay dates</span> above.</div>
+                <div className="sm:col-span-2 text-xs text-slate-500">Address comes from the <span className="font-medium text-slate-700">Location</span> field; check-in / check-out from <span className="font-medium text-slate-700">Stay dates</span> above.</div>
               </>}
               {(d.category === 'Car rental') && <>
                 <Field label="Pickup location"><Input value={d.booking?.address || ''} onChange={(e) => set({ booking: { ...d.booking, address: e.target.value } })} placeholder="Airport desk…" /></Field>

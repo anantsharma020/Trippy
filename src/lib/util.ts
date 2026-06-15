@@ -43,6 +43,19 @@ export const countdownLabel = (iso?: string): string => {
 export const classNames = (...xs: (string | false | null | undefined)[]) =>
   xs.filter(Boolean).join(' ')
 
+// "09:30" + "18:20" -> "8h 50m". Handles crossing midnight.
+export const durationBetween = (start?: string, end?: string): string | undefined => {
+  if (!start || !end) return undefined
+  const [sh, sm] = start.split(':').map(Number)
+  const [eh, em] = end.split(':').map(Number)
+  if ([sh, sm, eh, em].some((n) => Number.isNaN(n))) return undefined
+  let mins = (eh * 60 + em) - (sh * 60 + sm)
+  if (mins < 0) mins += 24 * 60
+  if (mins === 0) return undefined
+  const h = Math.floor(mins / 60), m = mins % 60
+  return [h ? `${h}h` : '', m ? `${m}m` : ''].filter(Boolean).join(' ')
+}
+
 export const initials = (name: string) =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('') || '?'
 
