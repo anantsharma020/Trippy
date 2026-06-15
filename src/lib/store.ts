@@ -76,9 +76,13 @@ class SupabaseStore implements Store {
     const row = docToRow(doc)
     const { error } = await supabase!.from('documents').insert(row)
     if (!error) return
-    if (error.code === '23505') { // unique_violation → row exists, update it
-      const { error: upErr } = await supabase!.from('documents').update(row).eq('id', doc.id)
+    // Fall back to UPDATE when the row already exists (23505) OR when inserting
+    // is blocked because we don't own it but are allowed to update it — e.g.
+    // accepting a friend request, whose row is owned by the sender (42501).
+    if (error.code === '23505' || error.code === '42501') {
+      const { data, error: upErr } = await supabase!.from('documents').update(row).eq('id', doc.id).select('id')
       if (upErr) throw upErr
+      if (!data || data.length === 0) throw error // nothing updated → surface the real error
       return
     }
     throw error
