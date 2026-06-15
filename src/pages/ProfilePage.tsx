@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { Save } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Save, Download, Upload } from 'lucide-react'
 import AppShell from '../ui/AppShell'
 import { useApp } from '../lib/db'
 import { isCloud } from '../lib/supabase'
 import { signOut } from '../lib/auth'
+import { exportBackup, importBackup } from '../lib/backup'
 import { Button, Card, Field, Input, Avatar } from '../ui/primitives'
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SEK', 'NOK', 'DKK']
@@ -15,10 +16,26 @@ export default function ProfilePage() {
   const [photo, setPhoto] = useState(me?.photoUrl || '')
   const [currency, setCurrency] = useState(me?.homeCurrency || 'EUR')
   const [saved, setSaved] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [msg, setMsg] = useState('')
 
   async function save() {
     await updateProfile({ name: name.trim() || me?.name, photoUrl: photo || undefined, homeCurrency: currency })
     setSaved(true); setTimeout(() => setSaved(false), 1500)
+  }
+
+  async function onImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setMsg('Importing…')
+    try {
+      const { trips, total } = await importBackup(file)
+      setMsg(`Restored ${trips} trip${trips === 1 ? '' : 's'} (${total} items).`)
+    } catch (err: any) {
+      setMsg(err.message || 'Import failed')
+    } finally {
+      if (fileRef.current) fileRef.current.value = ''
+    }
   }
 
   return (
@@ -43,9 +60,22 @@ export default function ProfilePage() {
         </div>
       </Card>
 
+      <Card className="mt-5 space-y-3">
+        <div>
+          <h3 className="font-semibold text-slate-900">Backup & restore</h3>
+          <p className="mt-0.5 text-sm text-slate-500">Export your trips to a file, then import on another device or after switching to cloud sync.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="soft" onClick={() => exportBackup()}><Download size={16} />Export my data</Button>
+          <Button variant="soft" onClick={() => fileRef.current?.click()}><Upload size={16} />Import from file</Button>
+          <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={onImport} />
+        </div>
+        {msg && <p className="text-sm text-brand-600">{msg}</p>}
+      </Card>
+
       <div className="mt-5 text-center">
         <Button variant="soft" onClick={() => signOut()}>Sign out</Button>
-        <p className="mt-3 text-xs text-slate-600">{isCloud ? 'Synced via Supabase' : 'Local mode — data stays in this browser'}</p>
+        <p className="mt-3 text-xs text-slate-600">{isCloud ? 'Synced via Supabase — signed in across devices' : 'Local mode — data stays in this browser'}</p>
       </div>
     </AppShell>
   )
