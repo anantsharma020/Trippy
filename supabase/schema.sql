@@ -23,6 +23,11 @@ create index if not exists documents_owner_idx        on public.documents (owner
 
 alter table public.documents enable row level security;
 
+-- Table-level privileges. RLS still governs *which rows* are visible/writable,
+-- but without these grants even signed-in users get "permission denied".
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on public.documents to authenticated;
+
 -- Is the current user a member (owner or invited) of the given trip?
 -- security definer so it can read the trips row regardless of the caller's RLS.
 create or replace function public.is_trip_member(tid text)

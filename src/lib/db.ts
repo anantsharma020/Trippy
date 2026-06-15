@@ -68,15 +68,24 @@ export const useApp = create<AppState>((set, get) => ({
   setUser: (u) => set({ user: u }),
 
   init: async () => {
+    const empty = {
+      profiles: [], friends: [], trips: [], items: [], actions: [],
+      packing: [], comments: [], reactions: [], dreams: [], packTemplates: [],
+    }
     const apply = async () => {
       const user = await getUser()
       set({ user })
-      await get().refresh()
-      if (user) await get().ensureProfile(user.name)
+      if (user) {
+        // Never let a failed initial load trap the app on the spinner.
+        try { await get().refresh() } catch (e) { console.error('Trippy: data load failed', e) }
+        try { await get().ensureProfile(user.name) } catch (e) { console.error('Trippy: profile init failed', e) }
+      } else {
+        set(empty) // signed out — nothing to load
+      }
       set({ ready: true })
     }
     await apply()
-    store.subscribe(() => get().refresh())
+    store.subscribe(() => { get().refresh().catch(() => {}) })
     onAuthChange(async () => { await apply() })
   },
 
