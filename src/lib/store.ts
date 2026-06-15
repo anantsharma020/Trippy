@@ -69,8 +69,19 @@ class SupabaseStore implements Store {
     return (data ?? []).map(rowToDoc)
   }
   async save(doc: Doc): Promise<void> {
-    const { error } = await supabase!.from('documents').upsert(docToRow(doc))
-    if (error) throw error
+    // We deliberately avoid .upsert(): an upsert compiles to INSERT ... ON
+    // CONFLICT DO UPDATE, which makes Postgres evaluate the UPDATE policy too —
+    // and that policy needs the row's trip to already exist, so creating a
+    // brand-new trip would fail RLS. Insert first; on a duplicate key, update.
+    const row = docToRow(doc)
+    const { error } = await supabase!.from('documents').insert(row)
+    if (!error) return
+    if (error.code === '23505') { // unique_violation → row exists, update it
+      const { error: upErr } = await supabase!.from('documents').update(row).eq('id', doc.id)
+      if (upErr) throw upErr
+      return
+    }
+    throw error
   }
   async remove(collection: string, id: string): Promise<void> {
     // soft delete so other clients converge via realtime
