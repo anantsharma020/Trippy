@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+/*
+  Light theme: white background, light-purple accent.
+  We override our custom `ink`/`brand` tokens (surfaces, accent) AND the bright
+  end of Tailwind's built-in `slate` ramp (which the app uses for text), so the
+  existing utility classes map to a light theme without rewriting every file.
+*/
+@theme {
+  /* surfaces & borders */
+  --color-ink-950: #ffffff;
+  --color-ink-900: #ffffff;
+  --color-ink-850: #f6f3fc;
+  --color-ink-800: #eee9f9;
+  --color-ink-700: #e2dbf2;
+  --color-ink-600: #cdc3e6;
+
+  /* light-purple accent */
+  --color-brand-50: #f5f3ff;
+  --color-brand-300: #6d28d9; /* accent text */
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #8b5cf6; /* primary buttons */
+  --color-brand-700: #7c3aed;
+
+  /* text ramp (app uses the bright end on what was a dark theme) */
+  --color-slate-100: #211c33;
+  --color-slate-200: #2c2740;
+  --color-slate-300: #3f3a55;
+  --color-slate-400: #6b6483;
+  --color-slate-500: #8b85a0;
+  --color-slate-600: #aaa4bb;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(125% 120% at 50% 0%, #f1ebfb 0%, #ffffff 55%);
+  color: #211c33;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Respect iPhone safe areas */
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #ddd5ee; border-radius: 8px; }
+
+input, textarea, select, button { font: inherit; }
+
+/* Leaflet on the light theme */
+.leaflet-container { background: #eee9f9; font: inherit; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #ffffff; color: #211c33; }
+
+@keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.animate-fadein { animation: fadein 0.25s ease both; }
