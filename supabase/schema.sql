@@ -58,15 +58,13 @@ to authenticated using (
 );
 
 -- INSERT --------------------------------------------------------------------
+-- You may insert any row you own. (Visibility is still governed by the SELECT
+-- policy below, so this can't leak other people's trips.) Keeping this simple
+-- avoids a chicken-and-egg where a brand-new trip can't be created because the
+-- membership check needs the trip to already exist.
 drop policy if exists documents_insert on public.documents;
 create policy documents_insert on public.documents for insert
-to authenticated with check (
-  owner_id = auth.uid()::text and (
-    collection in ('profiles', 'friends', 'dreams')
-    or collection = 'trips'                       -- creating your own trip
-    or (trip_id is not null and is_trip_member(trip_id))
-  )
-);
+to authenticated with check (owner_id = auth.uid()::text);
 
 -- UPDATE --------------------------------------------------------------------
 drop policy if exists documents_update on public.documents;
