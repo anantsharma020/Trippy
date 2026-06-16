@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
-import { Save, Download, Upload, Plus, X, Luggage } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Save, Download, Upload, Luggage, ChevronRight } from 'lucide-react'
 import AppShell from '../ui/AppShell'
 import { useApp } from '../lib/db'
 import { isCloud } from '../lib/supabase'
 import { signOut } from '../lib/auth'
 import { exportBackup, importBackup } from '../lib/backup'
-import { PACKING_CATEGORIES, type PackItem, type PackingCategory } from '../lib/types'
-import { Button, Card, Field, Input, Select, Avatar } from '../ui/primitives'
+import { Button, Card, Field, Input, Avatar } from '../ui/primitives'
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SEK', 'NOK', 'DKK']
 
@@ -61,7 +61,16 @@ export default function ProfilePage() {
         </div>
       </Card>
 
-      <CorePackingCard />
+      <Link to="/core-packing" className="mt-5 block">
+        <Card className="flex items-center gap-3 transition hover:ring-brand-500/40">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink-800 text-brand-600"><Luggage size={18} /></span>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-slate-900">Core packing list</p>
+            <p className="text-sm text-slate-500">Personal essentials added to every template</p>
+          </div>
+          <ChevronRight size={18} className="shrink-0 text-slate-400" />
+        </Card>
+      </Link>
 
       <Card className="mt-5 space-y-3">
         <div>
@@ -81,48 +90,5 @@ export default function ProfilePage() {
         <p className="mt-3 text-xs text-slate-600">{isCloud ? 'Synced via Supabase — signed in across devices' : 'Local mode — data stays in this browser'}</p>
       </div>
     </AppShell>
-  )
-}
-
-// Personal essentials (e.g. contacts, meds) auto-added to every packing template.
-function CorePackingCard() {
-  const me = useApp((s) => s.me())
-  const updateProfile = useApp((s) => s.updateProfile)
-  const [items, setItems] = useState<PackItem[]>(me?.corePacking ?? [])
-  const [saved, setSaved] = useState(false)
-
-  const setItem = (i: number, patch: Partial<PackItem>) =>
-    setItems((arr) => arr.map((it, x) => (x === i ? { ...it, ...patch } : it)))
-
-  async function save() {
-    await updateProfile({ corePacking: items.filter((it) => it.title.trim()) })
-    setSaved(true); setTimeout(() => setSaved(false), 1500)
-  }
-
-  return (
-    <Card className="mt-5 space-y-3">
-      <div>
-        <h3 className="flex items-center gap-2 font-semibold text-slate-900"><Luggage size={16} />Core packing list</h3>
-        <p className="mt-0.5 text-sm text-slate-500">Your personal essentials — added automatically to every packing template you use.</p>
-      </div>
-      <div className="space-y-2">
-        {items.map((it, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <Input value={it.title} onChange={(e) => setItem(i, { title: e.target.value })} placeholder="Contact lenses" className="flex-1" />
-            <Select value={it.category} onChange={(e) => setItem(i, { category: e.target.value as PackingCategory })} className="w-auto py-1.5 text-sm">
-              {PACKING_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-            </Select>
-            <button onClick={() => setItems((arr) => arr.filter((_, x) => x !== i))} className="text-slate-400 hover:text-rose-500"><X size={15} /></button>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center gap-2">
-        <Button variant="soft" size="sm" onClick={() => setItems((arr) => [...arr, { title: '', category: 'Miscellaneous' }])}><Plus size={14} />Add item</Button>
-        <div className="ml-auto flex items-center gap-2">
-          {saved && <span className="text-sm text-emerald-500">Saved!</span>}
-          <Button size="sm" onClick={save}><Save size={15} />Save</Button>
-        </div>
-      </div>
-    </Card>
   )
 }

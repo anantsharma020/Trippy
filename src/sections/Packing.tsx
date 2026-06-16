@@ -33,9 +33,9 @@ export default function Packing() {
       {canEdit && (
         <>
           <div className="flex gap-2">
-            <Select value={cat} onChange={(e) => setCat(e.target.value as PackingCategory)} className="w-auto">{PACKING_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</Select>
-            <Input value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && quickAdd()} placeholder="Add item…" className="flex-1" />
-            <Button onClick={quickAdd}><Plus size={16} /></Button>
+            <div className="min-w-0 flex-1"><Input value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && quickAdd()} placeholder="Add item…" /></div>
+            <div className="w-32 shrink-0"><Select value={cat} onChange={(e) => setCat(e.target.value as PackingCategory)} className="py-1.5 text-sm">{PACKING_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</Select></div>
+            <Button onClick={quickAdd} className="shrink-0"><Plus size={16} /></Button>
           </div>
           <Button variant="soft" size="sm" onClick={() => setTemplates(true)}><Sparkles size={15} />Start from a template</Button>
         </>
@@ -60,10 +60,16 @@ export default function Packing() {
                 {g.list.map((i) => (
                   <div key={i.id} className="flex items-center gap-3 rounded-xl bg-ink-900/70 ring-1 ring-ink-800 px-3 py-2">
                     <button disabled={!canEdit} onClick={() => toggle(i)} className={classNames('grid h-5 w-5 shrink-0 place-items-center rounded-md border', i.packed ? 'border-brand-500 bg-brand-600 text-white' : 'border-ink-600')}>{i.packed && <Check size={13} />}</button>
-                    <span className={classNames('flex-1 text-sm', i.packed ? 'text-slate-500 line-through' : 'text-slate-100')}>{i.title}</span>
-                    {i.quantity > 1 && <Chip>×{i.quantity}</Chip>}
-                    {i.bag && <span className="text-xs text-slate-500">{i.bag}</span>}
-                    {canEdit && <button onClick={() => deletePacking(i.id)} className="text-slate-500 hover:text-rose-400"><Trash2 size={14} /></button>}
+                    <span className={classNames('min-w-0 flex-1 truncate text-sm', i.packed ? 'text-slate-500 line-through' : 'text-slate-100')}>{i.title}</span>
+                    {i.bag && <span className="shrink-0 text-xs text-slate-500">{i.bag}</span>}
+                    {canEdit ? (
+                      <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-ink-850 ring-1 ring-ink-700">
+                        <button onClick={() => savePacking({ ...i, quantity: Math.max(1, i.quantity - 1) })} className="grid h-6 w-6 place-items-center text-slate-500 hover:text-slate-800">−</button>
+                        <span className="w-5 text-center text-xs tabular-nums text-slate-700">{i.quantity}</span>
+                        <button onClick={() => savePacking({ ...i, quantity: i.quantity + 1 })} className="grid h-6 w-6 place-items-center text-slate-500 hover:text-slate-800">+</button>
+                      </div>
+                    ) : i.quantity > 1 && <Chip>×{i.quantity}</Chip>}
+                    {canEdit && <button onClick={() => deletePacking(i.id)} className="shrink-0 text-slate-500 hover:text-rose-400"><Trash2 size={14} /></button>}
                   </div>
                 ))}
               </div>
@@ -134,11 +140,11 @@ function TemplateEditor({ template, onClose }: { template: PackTemplate; onClose
         <div className="space-y-2">
           {t.items.map((it, i) => (
             <div key={i} className="flex items-center gap-2">
-              <Input value={it.title} onChange={(e) => setItem(i, { title: e.target.value })} placeholder="Item" className="flex-1" />
-              <Select value={it.category} onChange={(e) => setItem(i, { category: e.target.value as PackingCategory })} className="w-auto py-1.5 text-sm">
+              <div className="flex-1 min-w-0"><Input value={it.title} onChange={(e) => setItem(i, { title: e.target.value })} placeholder="Item" /></div>
+              <div className="w-32 shrink-0"><Select value={it.category} onChange={(e) => setItem(i, { category: e.target.value as PackingCategory })} className="py-1.5 text-sm">
                 {PACKING_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </Select>
-              <button onClick={() => setT({ ...t, items: t.items.filter((_, x) => x !== i) })} className="text-slate-400 hover:text-rose-500"><X size={15} /></button>
+              </Select></div>
+              <button onClick={() => setT({ ...t, items: t.items.filter((_, x) => x !== i) })} className="shrink-0 text-slate-400 hover:text-rose-500"><X size={15} /></button>
             </div>
           ))}
         </div>

@@ -6,6 +6,7 @@ import AuthScreen from './pages/AuthScreen'
 import Home from './pages/Home'
 import Friends from './pages/Friends'
 import ProfilePage from './pages/ProfilePage'
+import CorePackingPage from './pages/CorePackingPage'
 import WorldPage from './pages/WorldPage'
 import DreamsPage from './pages/DreamsPage'
 import DreamDetail from './pages/DreamDetail'
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/dream/:id" element={<DreamDetail />} />
       <Route path="/friends" element={<Friends />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/core-packing" element={<CorePackingPage />} />
       <Route path="/trip/:id" element={<TripLayout />}>
         <Route index element={<Overview />} />
         <Route path="itinerary" element={<Itinerary />} />
