@@ -94,14 +94,15 @@ function TemplatePicker({ trip, onClose }: { trip: any; onClose: () => void }) {
   useEffect(() => { seedTemplates() }, [])
 
   async function apply(t: PackTemplate) {
-    // Your personal core list is folded into every template (no duplicates).
-    const seen = new Set<string>()
-    const merged = [...core, ...t.items].filter((it) => {
+    // Fold in your personal core list, and skip anything already on the trip's
+    // list — so the core items (and shared basics) never double up across templates.
+    const seen = new Set(tripPacking(trip.id).map((p) => p.title.trim().toLowerCase()))
+    for (const it of [...core, ...t.items]) {
       const k = it.title.trim().toLowerCase()
-      if (!k || seen.has(k)) return false
-      seen.add(k); return true
-    })
-    for (const it of merged) await savePacking(newPacking(trip.id, { title: it.title, category: it.category, quantity: it.quantity || 1 }))
+      if (!k || seen.has(k)) continue
+      seen.add(k)
+      await savePacking(newPacking(trip.id, { title: it.title, category: it.category, quantity: it.quantity || 1 }))
+    }
     onClose()
   }
 

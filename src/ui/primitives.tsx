@@ -103,6 +103,24 @@ const inputBase = 'w-full min-w-0 box-border rounded-xl bg-ink-850 border border
 
 export const Input = (p: React.InputHTMLAttributes<HTMLInputElement>) =>
   <input {...p} className={classNames(inputBase, p.className)} />
+
+// Date/time field with a reliable placeholder. Native date/time inputs render
+// a blank box when empty on iOS; here we overlay our own placeholder and hide
+// the native value text only while empty, so it always reads clearly.
+export function DateTimeField({ type, value, onChange, placeholder }: {
+  type: 'date' | 'time'; value?: string; onChange: (v: string | undefined) => void; placeholder: string
+}) {
+  return (
+    <div className="relative">
+      <input type={type} value={value || ''} onChange={(e) => onChange(e.target.value || undefined)}
+        className={classNames(inputBase, !value && 'text-transparent')}
+        style={!value ? { WebkitTextFillColor: 'transparent' } : undefined} />
+      {!value && (
+        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-500">{placeholder}</span>
+      )}
+    </div>
+  )
+}
 export const Textarea = (p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) =>
   <textarea {...p} className={classNames(inputBase, 'resize-y min-h-[80px]', p.className)} />
 export const Select = (p: React.SelectHTMLAttributes<HTMLSelectElement>) =>

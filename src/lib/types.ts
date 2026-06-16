@@ -19,7 +19,8 @@ export interface Profile {
   email?: string
   photoUrl?: string
   homeCurrency: string // ISO 4217, defaults to EUR
-  templatesSeeded?: boolean // have the default packing templates been copied in?
+  templatesSeeded?: boolean // legacy v1 seed flag
+  templatesVersion?: number // packing-template seed version (current: 2)
   visitedCountries?: string[] // manually-marked ISO alpha-2 codes
   corePacking?: PackItem[] // personal essentials auto-added to every template
 }
@@ -33,6 +34,7 @@ export interface PackTemplate {
   userId: ID
   name: string
   items: PackItem[]
+  auto?: boolean // seeded default (vs user-created) — replaced on version upgrades
 }
 
 export type FriendStatus = 'pending' | 'accepted'

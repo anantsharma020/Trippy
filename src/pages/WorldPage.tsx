@@ -55,6 +55,7 @@ export default function WorldPage() {
 
   const visitedCodes = useMemo(() => [...status.entries()].filter(([, s]) => s === 'visited').map(([c]) => c), [status])
   const continents = useMemo(() => new Set(visitedCodes.map((c) => COUNTRY_CONTINENT[c]).filter(Boolean)), [visitedCodes])
+  const [listOpen, setListOpen] = useState(false)
 
   const toggleManual = (code: string) => {
     const set = new Set(manualVisited)
@@ -66,12 +67,14 @@ export default function WorldPage() {
     <AppShell title="Your world" bottomNav
       right={<Button size="sm" onClick={() => setAdding(true)}><Plus size={16} />Visited</Button>}>
       <div className="space-y-4">
-        {/* Prominent counters */}
+        {/* Prominent counters — tap the first to see the list */}
         <div className="grid grid-cols-2 gap-3">
-          <Card className="text-center">
-            <div className="text-4xl font-bold text-emerald-600">{visitedCodes.length}</div>
-            <div className="mt-0.5 text-sm text-slate-500">countries visited</div>
-          </Card>
+          <button onClick={() => setListOpen(true)} className="text-left">
+            <Card className="text-center transition hover:ring-brand-500/40">
+              <div className="text-4xl font-bold text-emerald-600">{visitedCodes.length}</div>
+              <div className="mt-0.5 text-sm text-slate-500">countries visited ›</div>
+            </Card>
+          </button>
           <Card className="text-center">
             <div className="text-4xl font-bold text-emerald-600">{continents.size}<span className="text-2xl text-slate-400">/7</span></div>
             <div className="mt-0.5 text-sm text-slate-500">continents visited</div>
@@ -84,24 +87,56 @@ export default function WorldPage() {
           <Legend color={STATUS_COLOR.planned} label="Planned" />
           <Legend color={STATUS_COLOR.want} label="Want to go" />
         </div>
-
-        {manualVisited.length > 0 && (
-          <div>
-            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Marked visited</p>
-            <div className="flex flex-wrap gap-2">
-              {manualVisited.map((c) => (
-                <button key={c} onClick={() => toggleManual(c)}
-                  className="flex items-center gap-1.5 rounded-full bg-ink-850 ring-1 ring-ink-700 py-1 pl-3 pr-2 text-sm text-slate-700 hover:ring-rose-400">
-                  {COUNTRY_NAME[c] || c}<X size={13} className="text-slate-400" />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {adding && <AddVisitedModal selected={new Set(manualVisited)} onToggle={toggleManual} onClose={() => setAdding(false)} />}
+      {listOpen && <VisitedListModal codes={visitedCodes} manual={new Set(manualVisited)} onRemove={toggleManual} onAdd={() => { setListOpen(false); setAdding(true) }} onClose={() => setListOpen(false)} />}
     </AppShell>
+  )
+}
+
+// Visited countries grouped by continent, alphabetized. Manually-added ones can
+// be removed here; trip-derived ones are shown without a remove control.
+function VisitedListModal({ codes, manual, onRemove, onAdd, onClose }: {
+  codes: string[]; manual: Set<string>; onRemove: (code: string) => void; onAdd: () => void; onClose: () => void
+}) {
+  const byContinent = useMemo(() => {
+    const m = new Map<string, string[]>()
+    codes.forEach((c) => {
+      const k = COUNTRY_CONTINENT[c] || 'Other'
+      if (!m.has(k)) m.set(k, [])
+      m.get(k)!.push(c)
+    })
+    return [...m.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([cont, list]) => [cont, list.sort((x, y) => (COUNTRY_NAME[x] || x).localeCompare(COUNTRY_NAME[y] || y))] as const)
+  }, [codes])
+
+  return (
+    <Modal open onClose={onClose} title={`Countries visited · ${codes.length}`}>
+      {codes.length === 0 ? (
+        <p className="text-sm text-slate-500">No countries marked yet.</p>
+      ) : (
+        <div className="space-y-4">
+          {byContinent.map(([cont, list]) => (
+            <div key={cont}>
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">{cont} · {list.length}</p>
+              <div className="space-y-1">
+                {list.map((c) => (
+                  <div key={c} className="flex items-center justify-between rounded-lg bg-ink-850 px-3 py-2 text-sm text-slate-800">
+                    <span>{COUNTRY_NAME[c] || c}</span>
+                    {manual.has(c)
+                      ? <button onClick={() => onRemove(c)} className="text-slate-400 hover:text-rose-500"><X size={15} /></button>
+                      : <span className="text-xs text-slate-400">from a trip</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <Button variant="soft" size="sm" className="mt-4" onClick={onAdd}><Plus size={15} />Add countries</Button>
+    </Modal>
   )
 }
 

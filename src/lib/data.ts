@@ -1,6 +1,6 @@
 import { useApp } from './db'
 import { uid } from './util'
-import { PACKING_TEMPLATES } from './packingTemplates'
+import { PACKING_TEMPLATES, DEFAULT_CORE } from './packingTemplates'
 import type {
   ActionItem, Comment, Dream, Item, ItemCategory, PackingItem, PackTemplate, Reaction,
 } from './types'
@@ -91,19 +91,33 @@ export function newPackTemplate(name = ''): PackTemplate {
   return { id: uid(), userId: app().user!.id, name, items: [] }
 }
 
-// Copy the built-in templates into the user's own editable library, once.
-// `seeding` guards against React StrictMode double-invoking the effect before
-// the first async write lands (which would create duplicates).
+// Seed (and upgrade) the user's packing setup. Version 2 moves common items into
+// the personal core list and makes templates theme-only. `seeding` guards against
+// React StrictMode double-invoking the effect before the first write lands.
+const TEMPLATE_VERSION = 2
 let seeding = false
 export async function seedTemplates() {
   const st = app()
   const me = st.me()
-  if (!me || me.templatesSeeded || seeding || myTemplates().length > 0) return
+  if (!me || seeding || (me.templatesVersion ?? 0) >= TEMPLATE_VERSION) return
   seeding = true
   try {
-    await st.updateProfile({ templatesSeeded: true }) // mark first so re-entry bails
+    // Merge the everyday defaults into the user's core list (dedup by title), so
+    // everyone gets standard essentials while keeping anything they've added.
+    const coreSeen = new Set<string>()
+    const mergedCore = [...(me.corePacking ?? []), ...DEFAULT_CORE].filter((it) => {
+      const k = it.title.trim().toLowerCase()
+      if (!k || coreSeen.has(k)) return false
+      coreSeen.add(k); return true
+    })
+    // Mark version first so re-entry bails immediately.
+    await st.updateProfile({ templatesVersion: TEMPLATE_VERSION, corePacking: mergedCore })
+
+    // Replace the default templates (old bloated ones / any matching a default
+    // name) with the new theme-only set. Custom-named templates are untouched.
+    for (const t of myTemplates().filter((t) => t.auto || PACKING_TEMPLATES[t.name])) await st.del('packtemplates', t.id)
     for (const [name, items] of Object.entries(PACKING_TEMPLATES)) {
-      await st.put('packtemplates', { id: uid(), userId: me.id, name, items }, null, me.id)
+      await st.put('packtemplates', { id: uid(), userId: me.id, name, items, auto: true }, null, me.id)
     }
   } finally {
     seeding = false

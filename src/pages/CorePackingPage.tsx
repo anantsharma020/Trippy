@@ -15,6 +15,9 @@ export default function CorePackingPage() {
   const setItem = (i: number, patch: Partial<PackItem>) =>
     setItems((arr) => arr.map((it, x) => (x === i ? { ...it, ...patch } : it)))
 
+  // Display grouped by category (keeping original indices for editing).
+  const rows = items.map((it, i) => ({ it, i })).sort((a, b) => a.it.category.localeCompare(b.it.category))
+
   async function save() {
     await updateProfile({ corePacking: items.filter((it) => it.title.trim()) })
     setSaved(true); setTimeout(() => setSaved(false), 1500)
@@ -24,16 +27,22 @@ export default function CorePackingPage() {
     <AppShell title="Core packing list" back="/profile">
       <Card className="space-y-3">
         <p className="text-sm text-slate-500">Your personal essentials — added automatically to every packing template you apply, so you never forget them. This is yours alone; travel partners have their own.</p>
-        <div className="space-y-2">
-          {items.map((it, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className="flex-1 min-w-0"><Input value={it.title} onChange={(e) => setItem(i, { title: e.target.value })} placeholder="e.g. Contact lenses" /></div>
-              <div className="w-32 shrink-0"><Select value={it.category} onChange={(e) => setItem(i, { category: e.target.value as PackingCategory })} className="py-1.5 text-sm">
-                {PACKING_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </Select></div>
-              <button onClick={() => setItems((arr) => arr.filter((_, x) => x !== i))} className="shrink-0 text-slate-400 hover:text-rose-500"><X size={15} /></button>
-            </div>
-          ))}
+        <div className="space-y-1">
+          {rows.map(({ it, i }, idx) => {
+            const newCat = idx === 0 || rows[idx - 1].it.category !== it.category
+            return (
+              <div key={i}>
+                {newCat && <p className="mb-1 mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">{it.category}</p>}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0"><Input value={it.title} onChange={(e) => setItem(i, { title: e.target.value })} placeholder="e.g. Contact lenses" /></div>
+                  <div className="w-32 shrink-0"><Select value={it.category} onChange={(e) => setItem(i, { category: e.target.value as PackingCategory })} className="py-1.5 text-sm">
+                    {PACKING_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                  </Select></div>
+                  <button onClick={() => setItems((arr) => arr.filter((_, x) => x !== i))} className="shrink-0 text-slate-400 hover:text-rose-500"><X size={15} /></button>
+                </div>
+              </div>
+            )
+          })}
           {items.length === 0 && <p className="text-sm text-slate-500">No core items yet — add the things you bring on every trip.</p>}
         </div>
         <div className="flex items-center gap-2 border-t border-ink-800 pt-3">

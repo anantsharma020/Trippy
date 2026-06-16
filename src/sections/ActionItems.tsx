@@ -4,7 +4,7 @@ import { useTrip } from '../pages/TripLayout'
 import { useApp } from '../lib/db'
 import { tripActions, newAction, saveAction, deleteAction, tripItems } from '../lib/data'
 import { ACTION_STATUSES, type ActionItem } from '../lib/types'
-import { Button, Input, Modal, Field, Textarea, Select, EmptyState, Avatar, Chip } from '../ui/primitives'
+import { Button, Input, Modal, Field, Textarea, Select, EmptyState, Avatar, Chip, DateTimeField } from '../ui/primitives'
 import { fmtDate, daysUntil, classNames } from '../lib/util'
 
 const PRIOS = ['Low', 'Medium', 'High'] as const
@@ -122,7 +122,7 @@ function ActionEditor({ trip, action, onClose }: { trip: any; action: ActionItem
       <div className="space-y-3">
         <Field label="Task"><Input autoFocus value={a.title} onChange={(e) => set({ title: e.target.value })} placeholder="Book rental car" /></Field>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Due date"><Input type="date" value={a.dueDate || ''} onChange={(e) => set({ dueDate: e.target.value || undefined })} /></Field>
+          <Field label="Due date"><DateTimeField type="date" value={a.dueDate} onChange={(v) => set({ dueDate: v })} placeholder="Pick a date" /></Field>
           <Field label="Status"><Select value={a.status} onChange={(e) => set({ status: e.target.value as any })}>{ACTION_STATUSES.map((s) => <option key={s}>{s}</option>)}</Select></Field>
           <Field label="Priority"><Select value={a.priority || ''} onChange={(e) => set({ priority: (e.target.value || undefined) as any })}><option value="">—</option>{PRIOS.map((p) => <option key={p}>{p}</option>)}</Select></Field>
           <Field label="Assigned to"><Select value={a.assignedTo || ''} onChange={(e) => set({ assignedTo: e.target.value || undefined })}>

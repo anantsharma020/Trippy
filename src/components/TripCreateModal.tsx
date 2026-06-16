@@ -4,7 +4,7 @@ import { X, Plus } from 'lucide-react'
 import { useApp } from '../lib/db'
 import { uid } from '../lib/util'
 import type { Destination, MemberRole } from '../lib/types'
-import { Modal, Field, Input, Button, Avatar } from '../ui/primitives'
+import { Modal, Field, Input, Button, Avatar, DateTimeField } from '../ui/primitives'
 import LocationSearch from './LocationSearch'
 import ImagePicker from './ImagePicker'
 import { currencyFromCountry } from '../lib/currencies'
@@ -57,8 +57,8 @@ export default function TripCreateModal({ onClose }: { onClose: () => void }) {
         </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Start date"><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></Field>
-          <Field label="End date"><Input type="date" value={end} min={start} onChange={(e) => setEnd(e.target.value)} /></Field>
+          <Field label="Start date"><DateTimeField type="date" value={start} onChange={(v) => setStart(v || '')} placeholder="Pick a date" /></Field>
+          <Field label="End date"><DateTimeField type="date" value={end} onChange={(v) => setEnd(v || '')} placeholder="Pick a date" /></Field>
         </div>
 
         <Field label="Travel partners" hint={friends.length ? 'Tap to invite — they can view & edit' : 'Add friends first to invite them'}>

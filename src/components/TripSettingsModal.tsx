@@ -4,7 +4,7 @@ import { X, Trash2, UserPlus, Crown } from 'lucide-react'
 import { useApp } from '../lib/db'
 import { uid } from '../lib/util'
 import type { Destination, MemberRole, Trip } from '../lib/types'
-import { Modal, Field, Input, Select, Button, Avatar } from '../ui/primitives'
+import { Modal, Field, Input, Select, Button, Avatar, DateTimeField } from '../ui/primitives'
 import LocationSearch from './LocationSearch'
 import ImagePicker from './ImagePicker'
 import { currencyFromCountry } from '../lib/currencies'
@@ -35,8 +35,8 @@ export default function TripSettingsModal({ trip, onClose }: { trip: Trip; onClo
       <div className="space-y-5">
         <Field label="Trip name"><Input value={t.name} onChange={(e) => set({ name: e.target.value })} /></Field>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Start date"><Input type="date" value={t.startDate || ''} onChange={(e) => set({ startDate: e.target.value || undefined })} /></Field>
-          <Field label="End date"><Input type="date" value={t.endDate || ''} onChange={(e) => set({ endDate: e.target.value || undefined })} /></Field>
+          <Field label="Start date"><DateTimeField type="date" value={t.startDate} onChange={(v) => set({ startDate: v })} placeholder="Pick a date" /></Field>
+          <Field label="End date"><DateTimeField type="date" value={t.endDate} onChange={(v) => set({ endDate: v })} placeholder="Pick a date" /></Field>
         </div>
         <Field label="Cover photo" hint="optional"><ImagePicker value={t.coverImage} onChange={(v) => set({ coverImage: v })} /></Field>
 
@@ -49,10 +49,10 @@ export default function TripSettingsModal({ trip, onClose }: { trip: Trip; onClo
                   <span className="font-medium text-slate-200">{d.name}</span>
                   <button onClick={() => set({ destinations: t.destinations.filter((x) => x.id !== d.id) })} className="text-slate-400 hover:text-rose-400"><X size={15} /></button>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <Field label="From"><Input type="date" value={d.startDate || ''} onChange={(e) => setDest(d.id, { startDate: e.target.value || undefined })} /></Field>
-                  <Field label="To"><Input type="date" value={d.endDate || ''} onChange={(e) => setDest(d.id, { endDate: e.target.value || undefined })} /></Field>
-                  <div className="col-span-2"><Field label="Currency"><Input value={d.currency || ''} onChange={(e) => setDest(d.id, { currency: e.target.value.toUpperCase() || undefined })} placeholder="JPY" /></Field></div>
+                <div className="mt-2 grid grid-cols-1 gap-2">
+                  <Field label="From"><DateTimeField type="date" value={d.startDate} onChange={(v) => setDest(d.id, { startDate: v })} placeholder="Pick a date" /></Field>
+                  <Field label="To"><DateTimeField type="date" value={d.endDate} onChange={(v) => setDest(d.id, { endDate: v })} placeholder="Pick a date" /></Field>
+                  <Field label="Currency"><Input value={d.currency || ''} onChange={(e) => setDest(d.id, { currency: e.target.value.toUpperCase() || undefined })} placeholder="JPY" /></Field>
                 </div>
               </div>
             ))}

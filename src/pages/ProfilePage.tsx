@@ -6,6 +6,7 @@ import { useApp } from '../lib/db'
 import { isCloud } from '../lib/supabase'
 import { signOut } from '../lib/auth'
 import { exportBackup, importBackup } from '../lib/backup'
+import ImagePicker from '../components/ImagePicker'
 import { Button, Card, Field, Input, Avatar } from '../ui/primitives'
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'SEK', 'NOK', 'DKK']
@@ -47,7 +48,7 @@ export default function ProfilePage() {
           <div><p className="font-semibold text-slate-900">{me?.name}</p><p className="text-sm text-slate-500">{me?.email}</p></div>
         </div>
         <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
-        <Field label="Profile photo URL" hint="optional"><Input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="https://…" /></Field>
+        <Field label="Profile photo" hint="upload from your phone, or paste a URL"><ImagePicker value={photo} onChange={(v) => setPhoto(v || '')} /></Field>
         <Field label="Home currency">
           <div className="flex flex-wrap gap-2">
             {CURRENCIES.map((c) => (

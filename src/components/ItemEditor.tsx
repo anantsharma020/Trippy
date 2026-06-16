@@ -4,7 +4,7 @@ import { ITEM_CATEGORIES, type BookingDetails, type FlightLeg, type Item, type T
 import { saveItem, deleteItem, BOOKABLE_CATS, CATEGORY_EMOJI } from '../lib/data'
 import { useApp } from '../lib/db'
 import { uid, durationBetween } from '../lib/util'
-import { Modal, Field, Input, Textarea, Select, Button, Avatar } from '../ui/primitives'
+import { Modal, Field, Input, Textarea, Select, Button, Avatar, DateTimeField } from '../ui/primitives'
 import LocationSearch from './LocationSearch'
 
 const PRIORITIES = ['Low', 'Medium', 'High'] as const
@@ -77,16 +77,16 @@ export default function ItemEditor({ trip, item, onClose }: {
           </div>
           {isAccom ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Check-in date"><Input type="date" value={d.date || ''} onChange={(e) => set({ date: e.target.value || undefined })} /></Field>
-              <Field label="Check-in time"><Input type="time" value={d.startTime || ''} onChange={(e) => set({ startTime: e.target.value || undefined })} /></Field>
-              <Field label="Check-out date"><Input type="date" value={d.endDate || ''} onChange={(e) => set({ endDate: e.target.value || undefined })} /></Field>
-              <Field label="Check-out time"><Input type="time" value={d.endTime || ''} onChange={(e) => set({ endTime: e.target.value || undefined })} /></Field>
+              <Field label="Check-in date"><DateTimeField type="date" value={d.date} onChange={(v) => set({ date: v })} placeholder="Pick a date" /></Field>
+              <Field label="Check-in time"><DateTimeField type="time" value={d.startTime} onChange={(v) => set({ startTime: v })} placeholder="Add time" /></Field>
+              <Field label="Check-out date"><DateTimeField type="date" value={d.endDate} onChange={(v) => set({ endDate: v })} placeholder="Pick a date" /></Field>
+              <Field label="Check-out time"><DateTimeField type="time" value={d.endTime} onChange={(v) => set({ endTime: v })} placeholder="Add time" /></Field>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Date"><Input type="date" value={d.date || ''} onChange={(e) => set({ date: e.target.value || undefined })} /></Field>
-                <Field label="End date (multi-day)"><Input type="date" value={d.endDate || ''} onChange={(e) => set({ endDate: e.target.value || undefined })} /></Field>
+                <Field label="Date"><DateTimeField type="date" value={d.date} onChange={(v) => set({ date: v })} placeholder="Pick a date" /></Field>
+                <Field label="End date (multi-day)"><DateTimeField type="date" value={d.endDate} onChange={(v) => set({ endDate: v })} placeholder="Optional" /></Field>
                 <Field label="Rough time">
                   <Select value={d.roughTime || ''} onChange={(e) => set({ roughTime: (e.target.value || undefined) as any })}>
                     <option value="">—</option>
@@ -94,8 +94,8 @@ export default function ItemEditor({ trip, item, onClose }: {
                   </Select>
                 </Field>
                 <div className="grid grid-cols-2 gap-2">
-                  <Field label="Start"><Input type="time" value={d.startTime || ''} onChange={(e) => setTime('startTime', e.target.value)} /></Field>
-                  <Field label="End"><Input type="time" value={d.endTime || ''} onChange={(e) => setTime('endTime', e.target.value)} /></Field>
+                  <Field label="Start"><DateTimeField type="time" value={d.startTime} onChange={(v) => setTime('startTime', v || '')} placeholder="Start" /></Field>
+                  <Field label="End"><DateTimeField type="time" value={d.endTime} onChange={(v) => setTime('endTime', v || '')} placeholder="End" /></Field>
                 </div>
               </div>
               <Field label="Duration" hint="auto-filled from start/end times, or type your own — e.g. 2-3 hours">
@@ -150,7 +150,7 @@ export default function ItemEditor({ trip, item, onClose }: {
               )}
               {(d.category === 'Accommodation') && <>
                 <Field label="Contact"><Input value={d.booking?.contact || ''} onChange={(e) => set({ booking: { ...d.booking, contact: e.target.value } })} /></Field>
-                <Field label="Cancellation by"><Input type="date" value={d.booking?.cancellationDeadline || ''} onChange={(e) => set({ booking: { ...d.booking, cancellationDeadline: e.target.value } })} /></Field>
+                <Field label="Cancellation by"><DateTimeField type="date" value={d.booking?.cancellationDeadline} onChange={(v) => set({ booking: { ...d.booking, cancellationDeadline: v } })} placeholder="Pick a date" /></Field>
               </>}
               {(d.category === 'Car rental') && <>
                 <Field label="Pickup location"><Input value={d.booking?.address || ''} onChange={(e) => set({ booking: { ...d.booking, address: e.target.value } })} placeholder="Airport desk…" /></Field>
@@ -215,8 +215,8 @@ function FlightLegs({ booking, onChange }: { booking?: BookingDetails; onChange:
               <Field label="Flight no."><Input value={leg.flightNumber || ''} onChange={(e) => update(leg.id, { flightNumber: e.target.value })} placeholder="NH212" /></Field>
               <Field label="From"><Input value={leg.fromCode || ''} onChange={(e) => update(leg.id, { fromCode: e.target.value.toUpperCase() })} placeholder="HND" /></Field>
               <Field label="To"><Input value={leg.toCode || ''} onChange={(e) => update(leg.id, { toCode: e.target.value.toUpperCase() })} placeholder="HEL" /></Field>
-              <Field label="Depart"><Input type="time" value={leg.depTime || ''} onChange={(e) => update(leg.id, { depTime: e.target.value })} /></Field>
-              <Field label="Arrive"><Input type="time" value={leg.arrTime || ''} onChange={(e) => update(leg.id, { arrTime: e.target.value })} /></Field>
+              <Field label="Depart"><DateTimeField type="time" value={leg.depTime} onChange={(v) => update(leg.id, { depTime: v })} placeholder="Time" /></Field>
+              <Field label="Arrive"><DateTimeField type="time" value={leg.arrTime} onChange={(v) => update(leg.id, { arrTime: v })} placeholder="Time" /></Field>
               <Field label="Seat"><Input value={leg.seat || ''} onChange={(e) => update(leg.id, { seat: e.target.value })} placeholder="32A" /></Field>
               <Field label="Baggage"><Input value={leg.baggage || ''} onChange={(e) => update(leg.id, { baggage: e.target.value })} placeholder="23kg" /></Field>
             </div>
