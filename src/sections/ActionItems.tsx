@@ -15,8 +15,14 @@ export default function ActionItems() {
   const profile = useApp((s) => s.profile)
   const [editing, setEditing] = useState<ActionItem | null>(null)
   const [quick, setQuick] = useState('')
+  const [fAssignee, setFAssignee] = useState('')
+  const [fPriority, setFPriority] = useState('')
 
-  const actions = tripActions(trip.id).sort((a, b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999'))
+  const members = [trip.ownerId, ...trip.members.map((m) => m.userId)].filter((v, i, x) => x.indexOf(v) === i)
+  const allActions = tripActions(trip.id).sort((a, b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999'))
+  const actions = allActions.filter((a) =>
+    (!fAssignee || (fAssignee === 'none' ? !a.assignedTo : a.assignedTo === fAssignee)) &&
+    (!fPriority || (a.priority || '') === fPriority))
   const open = actions.filter((a) => a.status !== 'Done' && a.status !== 'Not needed')
   const done = actions.filter((a) => a.status === 'Done' || a.status === 'Not needed')
 
@@ -39,7 +45,23 @@ export default function ActionItems() {
         </div>
       )}
 
-      {actions.length === 0 && <EmptyState icon={<CheckSquare size={28} />} title="No action items" hint="Booking flights, visas, reservations — track the to-dos that make the trip happen." />}
+      {allActions.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Select value={fAssignee} onChange={(e) => setFAssignee(e.target.value)} className="flex-1 py-1.5 text-sm">
+            <option value="">Anyone</option>
+            <option value="none">Unassigned</option>
+            {members.map((m) => <option key={m} value={m}>{profile(m)?.name || 'Unknown'}</option>)}
+          </Select>
+          <Select value={fPriority} onChange={(e) => setFPriority(e.target.value)} className="flex-1 py-1.5 text-sm">
+            <option value="">Any priority</option>
+            {['High', 'Medium', 'Low'].map((p) => <option key={p} value={p}>{p}</option>)}
+          </Select>
+          {(fAssignee || fPriority) && <button onClick={() => { setFAssignee(''); setFPriority('') }} className="shrink-0 text-xs text-slate-500 hover:text-slate-700">Clear</button>}
+        </div>
+      )}
+
+      {allActions.length === 0 && <EmptyState icon={<CheckSquare size={28} />} title="No action items" hint="Booking flights, visas, reservations — track the to-dos that make the trip happen." />}
+      {allActions.length > 0 && actions.length === 0 && <p className="text-sm text-slate-500">No tasks match these filters.</p>}
 
       {open.length > 0 && (
         <div className="space-y-2">

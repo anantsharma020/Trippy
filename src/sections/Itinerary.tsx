@@ -160,7 +160,6 @@ function MapDay({ trip, days, itemsByDay, mapDay, setMapDay, ideas, showNearby, 
   trip: any; days: string[]; itemsByDay: (d: string) => Item[]; mapDay: string; setMapDay: (d: string) => void
   ideas: Item[]; showNearby: boolean; setShowNearby: (v: boolean) => void
 }) {
-  const [route, setRoute] = useState(false)
   const allDays = mapDay === 'all'
   // In "all days" mode each pin is numbered by the day it falls on.
   const dayIndex = new Map(days.map((d, i) => [d, i + 1]))
@@ -188,14 +187,13 @@ function MapDay({ trip, days, itemsByDay, mapDay, setMapDay, ideas, showNearby, 
           {days.map((d, i) => <option key={d} value={d}>Day {i + 1} · {fmtDate(d, 'EEE, MMM d')}</option>)}
         </Select>
         <button onClick={() => setShowNearby(!showNearby)}><Chip active={showNearby}>Nearby ideas</Chip></button>
-        <button onClick={() => setRoute(!route)}><Chip active={route}>Route</Chip></button>
         <span className="ml-auto text-xs text-slate-500">{dayItems.length} stops</span>
       </div>
       {dayItems.length === 0 ? (
         <EmptyState title="No mapped stops this day" hint="Add a location to a scheduled item to plot it on the map." />
       ) : (
         <>
-          <MapView points={points.filter((p) => !p.id.startsWith('idea-') || showNearby)} route={route} height={420} />
+          <MapView points={points.filter((p) => !p.id.startsWith('idea-') || showNearby)} height={420} />
           <div className="flex gap-4 text-xs text-slate-500">
             <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-brand-500" />Itinerary</span>
             <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-amber-500" />Accommodation</span>

@@ -58,7 +58,7 @@ export function AvatarStack({ names, max = 4, size = 26 }: { names: string[]; ma
   )
 }
 
-export function Modal({ open, onClose, title, children, wide, align = 'bottom' }: {
+export function Modal({ open, onClose, title, children, wide, align = 'top' }: {
   open: boolean; onClose: () => void; title?: React.ReactNode; children: React.ReactNode; wide?: boolean
   align?: 'bottom' | 'top'
 }) {

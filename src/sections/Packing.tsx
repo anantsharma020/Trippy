@@ -79,14 +79,23 @@ export default function Packing() {
 
 function TemplatePicker({ trip, onClose }: { trip: any; onClose: () => void }) {
   useApp((s) => s.packTemplates)
+  const me = useApp((s) => s.me())
   const templates = myTemplates()
   const [editing, setEditing] = useState<PackTemplate | null>(null)
+  const core = me?.corePacking ?? []
 
   // Copy the built-in templates into the user's editable library on first open.
   useEffect(() => { seedTemplates() }, [])
 
   async function apply(t: PackTemplate) {
-    for (const it of t.items) await savePacking(newPacking(trip.id, { title: it.title, category: it.category, quantity: it.quantity || 1 }))
+    // Your personal core list is folded into every template (no duplicates).
+    const seen = new Set<string>()
+    const merged = [...core, ...t.items].filter((it) => {
+      const k = it.title.trim().toLowerCase()
+      if (!k || seen.has(k)) return false
+      seen.add(k); return true
+    })
+    for (const it of merged) await savePacking(newPacking(trip.id, { title: it.title, category: it.category, quantity: it.quantity || 1 }))
     onClose()
   }
 
@@ -94,7 +103,7 @@ function TemplatePicker({ trip, onClose }: { trip: any; onClose: () => void }) {
 
   return (
     <Modal open onClose={onClose} title="Packing templates">
-      <p className="mb-3 text-sm text-slate-500">Your templates — tap to add to this trip. Edit or delete to make them your own.</p>
+      <p className="mb-3 text-sm text-slate-500">Your templates — tap to add to this trip{core.length > 0 ? ', including your core list' : ''}. Edit or delete to make them your own.</p>
       <div className="space-y-2">
         {templates.map((t) => (
           <div key={t.id} className="flex items-center gap-2 rounded-xl bg-ink-850 ring-1 ring-ink-700 px-3 py-2.5">

@@ -21,14 +21,18 @@ export interface Profile {
   homeCurrency: string // ISO 4217, defaults to EUR
   templatesSeeded?: boolean // have the default packing templates been copied in?
   visitedCountries?: string[] // manually-marked ISO alpha-2 codes
+  corePacking?: PackItem[] // personal essentials auto-added to every template
 }
+
+// A line in a packing template / core list.
+export interface PackItem { title: string; category: PackingCategory; quantity?: number }
 
 // A user-owned, editable packing template.
 export interface PackTemplate {
   id: ID
   userId: ID
   name: string
-  items: { title: string; category: PackingCategory; quantity?: number }[]
+  items: PackItem[]
 }
 
 export type FriendStatus = 'pending' | 'accepted'

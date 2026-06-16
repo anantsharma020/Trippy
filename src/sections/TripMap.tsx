@@ -11,7 +11,7 @@ const FOOD = ['Restaurant', 'Café', 'Bar']
 export default function TripMap() {
   const { trip } = useTrip()
   useApp((s) => s.items)
-  const [layers, setLayers] = useState({ itinerary: true, ideas: true, accommodation: true, food: true, routes: false })
+  const [layers, setLayers] = useState({ itinerary: true, ideas: true, accommodation: true, food: true })
   const toggle = (k: keyof typeof layers) => setLayers((l) => ({ ...l, [k]: !l[k] }))
 
   const items = tripItems(trip.id).filter((i) => i.lat != null)
@@ -28,18 +28,10 @@ export default function TripMap() {
     points.push({ id: i.id, lat: i.lat!, lng: i.lng!, label: i.title, sub: `${i.category}${i.city ? ' · ' + i.city : ''}`, color, emoji: CATEGORY_EMOJI[i.category] })
   })
 
-  // Route through scheduled items in chronological order
-  const routePts: MapPoint[] = layers.routes
-    ? items.filter((i) => i.date).sort((a, b) => (a.date! + (a.startTime || '')).localeCompare(b.date! + (b.startTime || '')))
-        .map((i, idx) => ({ id: 'r' + i.id, lat: i.lat!, lng: i.lng!, label: i.title, number: idx + 1, color: '#8b5cf6' }))
-    : []
-
-  const allPoints = layers.routes && routePts.length > 1 ? routePts : points
-
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {([['itinerary', 'Itinerary'], ['ideas', 'Ideas'], ['accommodation', 'Accommodation'], ['food', 'Food & drink'], ['routes', 'Routes']] as const).map(([k, label]) => (
+        {([['itinerary', 'Itinerary'], ['ideas', 'Ideas'], ['accommodation', 'Accommodation'], ['food', 'Food & drink']] as const).map(([k, label]) => (
           <button key={k} onClick={() => toggle(k)}><Chip active={layers[k]}>{label}</Chip></button>
         ))}
       </div>
@@ -47,7 +39,7 @@ export default function TripMap() {
         <EmptyState icon={<MapIcon size={28} />} title="No locations yet" hint="Add a location to ideas or itinerary items and they'll show up here, colour-coded by type." />
       ) : (
         <>
-          <MapView points={allPoints} route={layers.routes && routePts.length > 1} height={480} />
+          <MapView points={points} height={480} />
           <div className="flex flex-wrap gap-3 text-xs text-slate-400">
             <Legend c="#8b5cf6" l="Itinerary" /><Legend c="#64748b" l="Idea" /><Legend c="#f59e0b" l="Accommodation" /><Legend c="#ec4899" l="Food & drink" />
           </div>
