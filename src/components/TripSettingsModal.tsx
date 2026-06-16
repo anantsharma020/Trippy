@@ -34,9 +34,9 @@ export default function TripSettingsModal({ trip, onClose }: { trip: Trip; onClo
     <Modal open onClose={onClose} wide title="Trip settings">
       <div className="space-y-5">
         <Field label="Trip name"><Input value={t.name} onChange={(e) => set({ name: e.target.value })} /></Field>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Start date"><DateTimeField type="date" value={t.startDate} onChange={(v) => set({ startDate: v })} placeholder="Pick a date" /></Field>
-          <Field label="End date"><DateTimeField type="date" value={t.endDate} onChange={(v) => set({ endDate: v })} placeholder="Pick a date" /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Start date"><DateTimeField type="date" value={t.startDate} onChange={(v) => set({ startDate: v })} placeholder="Pick date" /></Field>
+          <Field label="End date"><DateTimeField type="date" value={t.endDate} onChange={(v) => set({ endDate: v })} placeholder="Pick date" /></Field>
         </div>
         <Field label="Cover photo" hint="optional"><ImagePicker value={t.coverImage} onChange={(v) => set({ coverImage: v })} /></Field>
 
@@ -49,10 +49,10 @@ export default function TripSettingsModal({ trip, onClose }: { trip: Trip; onClo
                   <span className="font-medium text-slate-200">{d.name}</span>
                   <button onClick={() => set({ destinations: t.destinations.filter((x) => x.id !== d.id) })} className="text-slate-400 hover:text-rose-400"><X size={15} /></button>
                 </div>
-                <div className="mt-2 grid grid-cols-1 gap-2">
-                  <Field label="From"><DateTimeField type="date" value={d.startDate} onChange={(v) => setDest(d.id, { startDate: v })} placeholder="Pick a date" /></Field>
-                  <Field label="To"><DateTimeField type="date" value={d.endDate} onChange={(v) => setDest(d.id, { endDate: v })} placeholder="Pick a date" /></Field>
-                  <Field label="Currency"><Input value={d.currency || ''} onChange={(e) => setDest(d.id, { currency: e.target.value.toUpperCase() || undefined })} placeholder="JPY" /></Field>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <Field label="From"><DateTimeField type="date" value={d.startDate} onChange={(v) => setDest(d.id, { startDate: v })} placeholder="Pick date" /></Field>
+                  <Field label="To"><DateTimeField type="date" value={d.endDate} onChange={(v) => setDest(d.id, { endDate: v })} placeholder="Pick date" /></Field>
+                  <div className="col-span-2"><Field label="Currency"><Input value={d.currency || ''} onChange={(e) => setDest(d.id, { currency: e.target.value.toUpperCase() || undefined })} placeholder="JPY" /></Field></div>
                 </div>
               </div>
             ))}

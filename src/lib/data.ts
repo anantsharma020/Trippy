@@ -94,7 +94,7 @@ export function newPackTemplate(name = ''): PackTemplate {
 // Seed (and upgrade) the user's packing setup. Version 2 moves common items into
 // the personal core list and makes templates theme-only. `seeding` guards against
 // React StrictMode double-invoking the effect before the first write lands.
-const TEMPLATE_VERSION = 2
+const TEMPLATE_VERSION = 3
 let seeding = false
 export async function seedTemplates() {
   const st = app()
@@ -102,23 +102,21 @@ export async function seedTemplates() {
   if (!me || seeding || (me.templatesVersion ?? 0) >= TEMPLATE_VERSION) return
   seeding = true
   try {
-    // Merge the everyday defaults into the user's core list (dedup by title), so
-    // everyone gets standard essentials while keeping anything they've added.
-    const coreSeen = new Set<string>()
-    const mergedCore = [...(me.corePacking ?? []), ...DEFAULT_CORE].filter((it) => {
-      const k = it.title.trim().toLowerCase()
-      if (!k || coreSeen.has(k)) return false
-      coreSeen.add(k); return true
-    })
-    // Mark version first so re-entry bails immediately.
-    await st.updateProfile({ templatesVersion: TEMPLATE_VERSION, corePacking: mergedCore })
-
     // Replace the default templates (old bloated ones / any matching a default
     // name) with the new theme-only set. Custom-named templates are untouched.
     for (const t of myTemplates().filter((t) => t.auto || PACKING_TEMPLATES[t.name])) await st.del('packtemplates', t.id)
     for (const [name, items] of Object.entries(PACKING_TEMPLATES)) {
       await st.put('packtemplates', { id: uid(), userId: me.id, name, items, auto: true }, null, me.id)
     }
+    // Merge the everyday defaults into the core list (dedup by title). Done last
+    // and only on success, so a failed run retries cleanly next time.
+    const coreSeen = new Set<string>()
+    const mergedCore = [...(me.corePacking ?? []), ...DEFAULT_CORE].filter((it) => {
+      const k = it.title.trim().toLowerCase()
+      if (!k || coreSeen.has(k)) return false
+      coreSeen.add(k); return true
+    })
+    await st.updateProfile({ templatesVersion: TEMPLATE_VERSION, corePacking: mergedCore })
   } finally {
     seeding = false
   }

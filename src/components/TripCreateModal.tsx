@@ -56,9 +56,9 @@ export default function TripCreateModal({ onClose }: { onClose: () => void }) {
           )}
         </Field>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Start date"><DateTimeField type="date" value={start} onChange={(v) => setStart(v || '')} placeholder="Pick a date" /></Field>
-          <Field label="End date"><DateTimeField type="date" value={end} onChange={(v) => setEnd(v || '')} placeholder="Pick a date" /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Start date"><DateTimeField type="date" value={start} onChange={(v) => setStart(v || '')} placeholder="Pick date" /></Field>
+          <Field label="End date"><DateTimeField type="date" value={end} onChange={(v) => setEnd(v || '')} placeholder="Pick date" /></Field>
         </div>
 
         <Field label="Travel partners" hint={friends.length ? 'Tap to invite — they can view & edit' : 'Add friends first to invite them'}>

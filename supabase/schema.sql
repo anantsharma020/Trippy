@@ -49,12 +49,11 @@ $$;
 drop policy if exists documents_select on public.documents;
 create policy documents_select on public.documents for select
 to authenticated using (
-  collection = 'profiles'
-  or (collection = 'friends' and (owner_id = auth.uid()::text
-        or (data->>'friendId') = auth.uid()::text))
-  or (collection = 'dreams' and owner_id = auth.uid()::text)
+  owner_id = auth.uid()::text            -- anything you own (your trips, templates, etc.)
+  or collection = 'profiles'             -- profiles are public to signed-in users
+  or (collection = 'friends' and (data->>'friendId') = auth.uid()::text)
+  or (trip_id is not null and is_trip_member(trip_id)) -- shared trips you belong to
   or (collection = 'trips' and is_trip_member(id))
-  or (trip_id is not null and is_trip_member(trip_id))
 );
 
 -- INSERT --------------------------------------------------------------------
@@ -70,11 +69,10 @@ to authenticated with check (owner_id = auth.uid()::text);
 drop policy if exists documents_update on public.documents;
 create policy documents_update on public.documents for update
 to authenticated using (
-  (collection = 'profiles' and owner_id = auth.uid()::text)
-  or (collection = 'friends' and ((data->>'friendId') = auth.uid()::text or owner_id = auth.uid()::text))
-  or (collection = 'dreams' and owner_id = auth.uid()::text)
+  owner_id = auth.uid()::text            -- edit/soft-delete anything you own
+  or (collection = 'friends' and (data->>'friendId') = auth.uid()::text) -- accept a request
+  or (trip_id is not null and is_trip_member(trip_id)) -- editors on a shared trip
   or (collection = 'trips' and is_trip_member(id))
-  or (trip_id is not null and is_trip_member(trip_id))
 );
 
 -- DELETE --------------------------------------------------------------------

@@ -74,6 +74,11 @@ input[type="time"]::-webkit-date-and-time-value {
 }
 input[type="date"]::-webkit-datetime-edit,
 input[type="time"]::-webkit-datetime-edit { color: #211c33; }
+/* Hide the native calendar/clock icon — it crowds the value on narrow fields.
+   The field is still tappable to open the picker; our own placeholder shows when empty. */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
+input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; }
 select { color: #211c33; }
 
 /* Leaflet on the light theme */

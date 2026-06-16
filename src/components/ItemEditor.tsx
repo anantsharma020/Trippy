@@ -76,32 +76,34 @@ export default function ItemEditor({ trip, item, onClose }: {
             <Calendar size={14} /> {isAccom ? 'Stay dates' : 'Scheduling'} {d.date ? <span className="text-brand-400">· in itinerary</span> : <span className="text-slate-500">· in ideas</span>}
           </div>
           {isAccom ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Check-in date"><DateTimeField type="date" value={d.date} onChange={(v) => set({ date: v })} placeholder="Pick a date" /></Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Check-in date"><DateTimeField type="date" value={d.date} onChange={(v) => set({ date: v })} placeholder="Pick date" /></Field>
               <Field label="Check-in time"><DateTimeField type="time" value={d.startTime} onChange={(v) => set({ startTime: v })} placeholder="Add time" /></Field>
-              <Field label="Check-out date"><DateTimeField type="date" value={d.endDate} onChange={(v) => set({ endDate: v })} placeholder="Pick a date" /></Field>
+              <Field label="Check-out date"><DateTimeField type="date" value={d.endDate} onChange={(v) => set({ endDate: v })} placeholder="Pick date" /></Field>
               <Field label="Check-out time"><DateTimeField type="time" value={d.endTime} onChange={(v) => set({ endTime: v })} placeholder="Add time" /></Field>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Date"><DateTimeField type="date" value={d.date} onChange={(v) => set({ date: v })} placeholder="Pick a date" /></Field>
-                <Field label="End date (multi-day)"><DateTimeField type="date" value={d.endDate} onChange={(v) => set({ endDate: v })} placeholder="Optional" /></Field>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Date"><DateTimeField type="date" value={d.date} onChange={(v) => set({ date: v })} placeholder="Pick date" /></Field>
+                <Field label="End date"><DateTimeField type="date" value={d.endDate} onChange={(v) => set({ endDate: v })} placeholder="Optional" /></Field>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Start time"><DateTimeField type="time" value={d.startTime} onChange={(v) => setTime('startTime', v || '')} placeholder="Add time" /></Field>
+                <Field label="End time"><DateTimeField type="time" value={d.endTime} onChange={(v) => setTime('endTime', v || '')} placeholder="Add time" /></Field>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <Field label="Rough time">
                   <Select value={d.roughTime || ''} onChange={(e) => set({ roughTime: (e.target.value || undefined) as any })}>
                     <option value="">—</option>
                     {ROUGH.map((r) => <option key={r} value={r}>{r}</option>)}
                   </Select>
                 </Field>
-                <div className="grid grid-cols-2 gap-2">
-                  <Field label="Start"><DateTimeField type="time" value={d.startTime} onChange={(v) => setTime('startTime', v || '')} placeholder="Start" /></Field>
-                  <Field label="End"><DateTimeField type="time" value={d.endTime} onChange={(v) => setTime('endTime', v || '')} placeholder="End" /></Field>
-                </div>
+                <Field label="Duration" hint="auto from times">
+                  <Input value={d.duration || ''} onChange={(e) => set({ duration: e.target.value || undefined })} placeholder="2-3 hours" />
+                </Field>
               </div>
-              <Field label="Duration" hint="auto-filled from start/end times, or type your own — e.g. 2-3 hours">
-                <Input value={d.duration || ''} onChange={(e) => set({ duration: e.target.value || undefined })} placeholder="2-3 hours" />
-              </Field>
-            </>
+            </div>
           )}
           {d.date && (
             <button onClick={() => set({ date: undefined, startTime: undefined, endTime: undefined, roughTime: undefined, endDate: undefined })}
