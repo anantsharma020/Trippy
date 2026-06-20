@@ -97,7 +97,7 @@ export default function Itinerary() {
             const dayEntries = entriesByDay(date)
             const isToday = date === today
             return (
-              <div key={date} ref={isToday ? todayRef : undefined} className="scroll-mt-4">
+              <div key={date} ref={isToday ? todayRef : undefined} className="scroll-mt-28">
                 <div className="mb-2 flex items-center gap-2">
                   <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-600 text-xs font-bold text-white">{idx + 1}</span>
                   <h3 className="font-semibold text-slate-900">{fmtDate(date, 'EEEE, MMM d')}</h3>

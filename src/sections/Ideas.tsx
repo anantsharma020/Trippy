@@ -20,15 +20,18 @@ export default function Ideas() {
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('')
   const [needsBooking, setNeedsBooking] = useState(false)
+  const [hideDone, setHideDone] = useState(false)
   const [quick, setQuick] = useState('')
 
   // Ideas = items without a date
   const ideas = tripItems(trip.id).filter((i) => !i.date)
+  const doneCount = ideas.filter((i) => i.done).length
   const filtered = useMemo(() => ideas.filter((i) =>
     (!q || i.title.toLowerCase().includes(q.toLowerCase())) &&
     (!cat || i.category === cat) &&
-    (!needsBooking || i.bookingStatus === 'Need to book')
-  ), [ideas, q, cat, needsBooking])
+    (!needsBooking || i.bookingStatus === 'Need to book') &&
+    (!hideDone || !i.done)
+  ), [ideas, q, cat, needsBooking, hideDone])
 
   async function quickAdd() {
     if (!quick.trim()) return
@@ -75,6 +78,9 @@ export default function Ideas() {
         <button onClick={() => setNeedsBooking((v) => !v)}>
           <Chip active={needsBooking}>Needs booking</Chip>
         </button>
+        {doneCount > 0 && <button onClick={() => setHideDone((v) => !v)}>
+          <Chip active={hideDone}>Hide done ({doneCount})</Chip>
+        </button>}
         <span className="ml-auto text-xs text-slate-500">{filtered.length} ideas</span>
       </div>
 
@@ -82,11 +88,11 @@ export default function Ideas() {
         <EmptyState icon={<Lightbulb size={28} />} title="No ideas yet"
           hint="Capture restaurants, sights, viewpoints, day trips — anything you might want to do. Add a date later to schedule it." />
       ) : view === 'list' ? (
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{filtered.map((i) => <ItemCard key={i.id} item={i} trip={trip} onOpen={openItem} />)}</div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{filtered.map((i) => <ItemCard key={i.id} item={i} trip={trip} onOpen={openItem} showDone canEdit={canEdit} />)}</div>
       ) : view === 'map' ? (
         mapPoints.length ? <MapView points={mapPoints} /> : <EmptyState title="No locations" hint="Add a location to ideas to see them on the map." />
       ) : (
-        <Grouped items={filtered} view={view} trip={trip} onOpen={openItem} profile={profile} />
+        <Grouped items={filtered} view={view} trip={trip} onOpen={openItem} profile={profile} canEdit={canEdit} />
       )}
 
       {opened && <ItemModal trip={trip} item={opened.item} edit={opened.edit} canEdit={canEdit} onClose={() => setOpened(null)} />}
@@ -94,8 +100,8 @@ export default function Ideas() {
   )
 }
 
-function Grouped({ items, view, trip, onOpen, profile }: {
-  items: Item[]; view: View; trip: any; onOpen: (i: Item) => void; profile: (id?: string) => any
+function Grouped({ items, view, trip, onOpen, profile, canEdit }: {
+  items: Item[]; view: View; trip: any; onOpen: (i: Item) => void; profile: (id?: string) => any; canEdit: boolean
 }) {
   const groups = useMemo(() => {
     const map = new Map<string, Item[]>()
@@ -122,7 +128,7 @@ function Grouped({ items, view, trip, onOpen, profile }: {
             {view === 'category' && <span>{CATEGORY_EMOJI[key as keyof typeof CATEGORY_EMOJI] || '•'}</span>}{key}
             <span className="text-xs font-normal text-slate-500">· {list.length}</span>
           </h3>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{list.map((i) => <ItemCard key={i.id} item={i} trip={trip} onOpen={onOpen} />)}</div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{list.map((i) => <ItemCard key={i.id} item={i} trip={trip} onOpen={onOpen} showDone canEdit={canEdit} />)}</div>
         </div>
       ))}
     </div>

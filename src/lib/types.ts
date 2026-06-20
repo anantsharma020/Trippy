@@ -116,6 +116,7 @@ export interface Item {
   source?: string // e.g. an Instagram URL or who recommended it
   tags: string[]
   priority?: Priority
+  done?: boolean // marked done (e.g. an idea you've already done)
   status?: ItemStatus // optional — kept for back-compat, not surfaced in the UI
   cost?: number
   currency?: string

@@ -29,7 +29,7 @@ export default function TripLayout() {
 
   return (
     <AppShell title={trip.name} back="/">
-      <nav className="-mx-4 mb-5 flex gap-1 overflow-x-auto px-4 pb-1">
+      <nav className="-mx-4 mb-5 flex gap-1 overflow-x-auto border-b border-ink-800 bg-ink-950/85 px-4 pb-2 pt-1 backdrop-blur-xl sticky top-[57px] z-20">
         {TABS.map((t) => (
           <NavLink key={t.label} to={t.to} end={t.end} replace
             className={({ isActive }) => classNames(

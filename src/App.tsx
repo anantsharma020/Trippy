@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useApp } from './lib/db'
 import { Spinner } from './ui/primitives'
 import AuthScreen from './pages/AuthScreen'
@@ -20,6 +20,14 @@ import ActionItems from './sections/ActionItems'
 import Packing from './sections/Packing'
 import TripMap from './sections/TripMap'
 
+// Reset scroll to the top whenever the path changes, so every screen (and trip
+// section) opens at the top instead of inheriting the previous scroll position.
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
+
 export default function App() {
   const { ready, user, init } = useApp()
 
@@ -29,6 +37,8 @@ export default function App() {
   if (!user) return <AuthScreen />
 
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/world" element={<WorldPage />} />
@@ -49,5 +59,6 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   )
 }

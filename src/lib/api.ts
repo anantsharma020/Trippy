@@ -4,6 +4,7 @@
 // Responses are cached in localStorage to stay friendly to the public endpoints.
 
 import { differenceInCalendarDays, parseISO, format, subYears } from 'date-fns'
+import { parseMapsLink } from './util'
 
 async function cachedJSON(url: string, ttlMs: number): Promise<any> {
   const key = `trippy:cache:${url}`
@@ -44,6 +45,46 @@ export async function geocode(query: string): Promise<GeoResult[]> {
       longitude: parseFloat(r.lon),
     }
   }).filter((r: GeoResult) => !Number.isNaN(r.latitude))
+}
+
+// Resolve a Google Maps link to coordinates. Full URLs are parsed directly;
+// short share links (maps.app.goo.gl) carry no coordinates, so we follow the
+// redirect via a public CORS proxy and read the coordinates from the final page.
+export async function resolveMapsLink(url: string): Promise<{ lat: number; lng: number; label?: string } | null> {
+  const direct = parseMapsLink(url)
+  if (direct) return direct
+  if (!/^https?:\/\//.test(url)) return null
+  const enc = encodeURIComponent(url.trim())
+  // Try a couple of public proxies that follow the redirect; whichever responds
+  // first with coordinates wins. Aborted after a few seconds so it never hangs.
+  for (const [proxy, isJson] of [
+    [`https://api.allorigins.win/get?url=${enc}`, true],
+    [`https://corsproxy.io/?url=${enc}`, false],
+  ] as const) {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), 8000)
+    try {
+      const res = await fetch(proxy, { signal: ctrl.signal })
+      const text = await res.text()
+      let finalUrl = '', html = text
+      if (isJson) { try { const j = JSON.parse(text); finalUrl = j?.status?.url || ''; html = j?.contents || '' } catch { /* not json */ } }
+      // Google's consent page carries the real maps URL in a `continue=` param.
+      let cont = ''
+      const cm = html.match(/continue=([^"&\\]+)/i)
+      if (cm) try { cont = decodeURIComponent(cm[1]) } catch { /* ignore */ }
+      const coords = parseMapsLink(finalUrl) || parseMapsLink(cont) || parseMapsLink(html)
+      if (coords) {
+        let label = coords.label
+        if (!label) {
+          const m = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) || html.match(/<title>([^<]+)<\/title>/i)
+          if (m) label = m[1].replace(/\s*-\s*Google Maps.*$/i, '').trim()
+        }
+        return { lat: coords.lat, lng: coords.lng, label }
+      }
+    } catch { /* try next proxy */ }
+    finally { clearTimeout(timer) }
+  }
+  return null
 }
 
 // Reverse geocode coordinates → ISO country code (free, no key). Used to

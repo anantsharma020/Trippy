@@ -4,6 +4,7 @@ import { ITEM_CATEGORIES, type BookingDetails, type FlightLeg, type Item, type T
 import { saveItem, deleteItem, BOOKABLE_CATS, CATEGORY_EMOJI } from '../lib/data'
 import { useApp } from '../lib/db'
 import { uid, durationBetween, parseMapsLink } from '../lib/util'
+import { resolveMapsLink } from '../lib/api'
 import { Modal, Field, Input, Textarea, Select, Button, Avatar, DateTimeField } from '../ui/primitives'
 import LocationSearch from './LocationSearch'
 
@@ -196,18 +197,25 @@ export default function ItemEditor({ trip, item, onClose }: {
 }
 
 // Paste a Google Maps link to drop the pin exactly, for places search can't find.
+// Works with full URLs and short "share" links (resolved via a redirect proxy).
 function MapsLinkInput({ onResolve }: { onResolve: (lat: number, lng: number, label?: string) => void }) {
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState('')
   const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  function apply(value: string) {
-    setUrl(value)
-    if (!value.trim()) { setErr(''); return }
-    const r = parseMapsLink(value)
-    if (r) { onResolve(r.lat, r.lng, r.label); setErr(''); setUrl(''); setOpen(false) }
-    else if (/maps\.app\.goo\.gl|goo\.gl\/maps/.test(value)) setErr('Short links don\'t contain coordinates — open it in Maps, then copy the full address-bar URL.')
-    else setErr('Couldn\'t find coordinates in that link.')
+  async function apply(value: string) {
+    setUrl(value); setErr('')
+    if (!value.trim()) return
+    // Resolve instantly for full URLs / "lat, lng"; short links need a fetch.
+    const fast = parseMapsLink(value)
+    const isLink = /^https?:\/\//.test(value.trim())
+    if (!fast && !isLink) return
+    setBusy(true)
+    const r = fast || await resolveMapsLink(value)
+    setBusy(false)
+    if (r) { onResolve(r.lat, r.lng, r.label); setUrl(''); setOpen(false) }
+    else setErr('Couldn\'t read that link. Foolproof way: in Google Maps long-press the exact spot to drop a pin — the coordinates appear at the top; copy and paste them here.')
   }
 
   if (!open) return (
@@ -218,8 +226,9 @@ function MapsLinkInput({ onResolve }: { onResolve: (lat: number, lng: number, la
   return (
     <div className="mt-2">
       <Input autoFocus value={url} onChange={(e) => apply(e.target.value)} placeholder="Paste a Google Maps link or lat, lng" className="text-sm" />
+      {busy && <p className="mt-1 text-xs text-slate-500">Looking up the location…</p>}
       {err && <p className="mt-1 text-xs text-rose-500">{err}</p>}
-      <p className="mt-1 text-xs text-slate-500">In Google Maps: tap the place → Share → Copy link (or copy the URL from the address bar).</p>
+      {!busy && !err && <p className="mt-1 text-xs text-slate-500">Paste a Share → Copy link, or long-press the spot in Maps and copy the coordinates.</p>}
     </div>
   )
 }
