@@ -66,6 +66,30 @@ export const colorFromString = (s: string) => {
   return `hsl(${h} 55% 45%)`
 }
 
+// Extract coordinates (and a name, if present) from a pasted Google Maps URL.
+// Handles the common full-URL forms; shortened goo.gl links carry no coords.
+export function parseMapsLink(url: string): { lat: number; lng: number; label?: string } | null {
+  const patterns = [
+    /@(-?\d+\.\d+),(-?\d+\.\d+)/,                 // …/@35.6,139.7,15z
+    /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,             // …!3d35.6!4d139.7
+    /[?&](?:q|query|ll|destination|center)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/, // ?q=35.6,139.7
+    /^\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)\s*$/,       // raw "35.6, 139.7"
+  ]
+  for (const re of patterns) {
+    const m = url.match(re)
+    if (m) {
+      const lat = parseFloat(m[1]), lng = parseFloat(m[2])
+      if (!Number.isNaN(lat) && !Number.isNaN(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+        let label: string | undefined
+        const place = url.match(/\/place\/([^/@]+)/)
+        if (place) try { label = decodeURIComponent(place[1].replace(/\+/g, ' ')) } catch { /* ignore */ }
+        return { lat, lng, label }
+      }
+    }
+  }
+  return null
+}
+
 export const money = (amount?: number, currency = 'EUR') => {
   if (amount == null || Number.isNaN(amount)) return ''
   try {

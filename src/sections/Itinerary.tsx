@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { eachDayOfInterval, parseISO, format } from 'date-fns'
 import { Plus, CalendarRange, LogIn, LogOut } from 'lucide-react'
 import { useTrip } from '../pages/TripLayout'
@@ -58,9 +58,19 @@ export default function Itinerary() {
     const seen = new Set<string>()
     return entriesByDay(date).map((e) => e.item).filter((i) => i.lat != null && !seen.has(i.id) && seen.add(i.id))
   }
-  const firstDay = days[0] || todayISO()
-  const [mapDay, setMapDay] = useState(firstDay)
+  const today = todayISO()
+  const tripStarted = days.includes(today) // trip is currently underway
+  const firstDay = days[0] || today
+  const [mapDay, setMapDay] = useState(tripStarted ? today : firstDay)
   const [showNearby, setShowNearby] = useState(false)
+
+  // When the trip is underway, jump the day view to today on open.
+  const todayRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (view === 'days' && tripStarted && todayRef.current) {
+      todayRef.current.scrollIntoView({ block: 'start', behavior: 'auto' })
+    }
+  }, [view, tripStarted])
 
   const addOn = (date: string) => setOpened({ item: newItem(trip.id, { date }), edit: true })
   const openItem = (it: Item) => setOpened({ item: it, edit: false })
@@ -85,11 +95,13 @@ export default function Itinerary() {
         <div className="space-y-5">
           {days.map((date, idx) => {
             const dayEntries = entriesByDay(date)
+            const isToday = date === today
             return (
-              <div key={date}>
+              <div key={date} ref={isToday ? todayRef : undefined} className="scroll-mt-4">
                 <div className="mb-2 flex items-center gap-2">
                   <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-600 text-xs font-bold text-white">{idx + 1}</span>
                   <h3 className="font-semibold text-slate-900">{fmtDate(date, 'EEEE, MMM d')}</h3>
+                  {isToday && <Chip className="bg-brand-500/15 text-brand-300">Today</Chip>}
                   {canEdit && <button onClick={() => addOn(date)} className="ml-auto rounded-lg p-1 text-slate-400 hover:bg-ink-800 hover:text-brand-600"><Plus size={16} /></button>}
                 </div>
                 {dayEntries.length === 0 ? <p className="ml-9 text-sm text-slate-500">No plans</p> : (

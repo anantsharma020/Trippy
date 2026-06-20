@@ -19,7 +19,9 @@ export default function Packing() {
 
   const items = tripPacking(trip.id)
   const packed = items.filter((i) => i.packed).length
-  const byCat = PACKING_CATEGORIES.map((c) => ({ cat: c, list: items.filter((i) => i.category === c) })).filter((g) => g.list.length)
+  const byCat = PACKING_CATEGORIES
+    .map((c) => ({ cat: c, list: items.filter((i) => i.category === c).sort((a, b) => a.title.localeCompare(b.title)) }))
+    .filter((g) => g.list.length)
 
   async function quickAdd() {
     if (!quick.trim()) return
@@ -57,21 +59,7 @@ export default function Packing() {
             <div key={g.cat}>
               <h3 className="mb-2 text-sm font-semibold text-slate-300">{g.cat} <span className="text-xs font-normal text-slate-500">· {g.list.filter((i) => i.packed).length}/{g.list.length}</span></h3>
               <div className="space-y-1.5">
-                {g.list.map((i) => (
-                  <div key={i.id} className="flex items-center gap-3 rounded-xl bg-ink-900/70 ring-1 ring-ink-800 px-3 py-2">
-                    <button disabled={!canEdit} onClick={() => toggle(i)} className={classNames('grid h-5 w-5 shrink-0 place-items-center rounded-md border', i.packed ? 'border-brand-500 bg-brand-600 text-white' : 'border-ink-600')}>{i.packed && <Check size={13} />}</button>
-                    <span className={classNames('min-w-0 flex-1 truncate text-sm', i.packed ? 'text-slate-500 line-through' : 'text-slate-100')}>{i.title}</span>
-                    {i.bag && <span className="shrink-0 text-xs text-slate-500">{i.bag}</span>}
-                    {canEdit ? (
-                      <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-ink-850 ring-1 ring-ink-700">
-                        <button onClick={() => savePacking({ ...i, quantity: Math.max(1, i.quantity - 1) })} className="grid h-6 w-6 place-items-center text-slate-500 hover:text-slate-800">−</button>
-                        <span className="w-5 text-center text-xs tabular-nums text-slate-700">{i.quantity}</span>
-                        <button onClick={() => savePacking({ ...i, quantity: i.quantity + 1 })} className="grid h-6 w-6 place-items-center text-slate-500 hover:text-slate-800">+</button>
-                      </div>
-                    ) : i.quantity > 1 && <Chip>×{i.quantity}</Chip>}
-                    {canEdit && <button onClick={() => deletePacking(i.id)} className="shrink-0 text-slate-500 hover:text-rose-400"><Trash2 size={14} /></button>}
-                  </div>
-                ))}
+                {g.list.map((i) => <PackRow key={i.id} item={i} canEdit={canEdit} onToggle={() => toggle(i)} />)}
               </div>
             </div>
           ))}
@@ -79,6 +67,37 @@ export default function Packing() {
       )}
 
       {templates && <TemplatePicker trip={trip} onClose={() => setTemplates(false)} />}
+    </div>
+  )
+}
+
+// A single packing row with an editable title. The title commits on blur so the
+// list doesn't re-sort (and the row jump) while you're still typing.
+function PackRow({ item, canEdit, onToggle }: { item: PackingItem; canEdit: boolean; onToggle: () => void }) {
+  const [title, setTitle] = useState(item.title)
+  // Keep in sync if the stored title changes elsewhere.
+  useEffect(() => { setTitle(item.title) }, [item.title])
+  const commit = () => { const t = title.trim(); if (t && t !== item.title) savePacking({ ...item, title: t }); else if (!t) setTitle(item.title) }
+
+  return (
+    <div className="flex items-center gap-2 rounded-xl bg-ink-900/70 ring-1 ring-ink-800 px-3 py-2">
+      <button disabled={!canEdit} onClick={onToggle} className={classNames('grid h-5 w-5 shrink-0 place-items-center rounded-md border', item.packed ? 'border-brand-500 bg-brand-600 text-white' : 'border-ink-600')}>{item.packed && <Check size={13} />}</button>
+      {canEdit ? (
+        <input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={commit}
+          onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+          className={classNames('min-w-0 flex-1 bg-transparent text-sm outline-none', item.packed ? 'text-slate-500 line-through' : 'text-slate-900')} />
+      ) : (
+        <span className={classNames('min-w-0 flex-1 truncate text-sm', item.packed ? 'text-slate-500 line-through' : 'text-slate-100')}>{item.title}</span>
+      )}
+      {item.bag && <span className="shrink-0 text-xs text-slate-500">{item.bag}</span>}
+      {canEdit ? (
+        <div className="flex shrink-0 items-center gap-0.5 rounded-lg bg-ink-850 ring-1 ring-ink-700">
+          <button onClick={() => savePacking({ ...item, quantity: Math.max(1, item.quantity - 1) })} className="grid h-6 w-6 place-items-center text-slate-500 hover:text-slate-800">−</button>
+          <span className="w-5 text-center text-xs tabular-nums text-slate-700">{item.quantity}</span>
+          <button onClick={() => savePacking({ ...item, quantity: item.quantity + 1 })} className="grid h-6 w-6 place-items-center text-slate-500 hover:text-slate-800">+</button>
+        </div>
+      ) : item.quantity > 1 && <Chip>×{item.quantity}</Chip>}
+      {canEdit && <button onClick={() => deletePacking(item.id)} className="shrink-0 text-slate-500 hover:text-rose-400"><Trash2 size={14} /></button>}
     </div>
   )
 }

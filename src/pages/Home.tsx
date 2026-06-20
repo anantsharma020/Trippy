@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Plane, Lightbulb, CheckSquare, Luggage } from 'lucide-react'
+import { Plus, Plane, Lightbulb, CheckSquare, Luggage, History, ChevronRight } from 'lucide-react'
 import AppShell from '../ui/AppShell'
 import { useApp } from '../lib/db'
 import type { Trip } from '../lib/types'
@@ -15,8 +15,9 @@ export default function Home() {
   const profile = useApp((s) => s.profile)
   const [creating, setCreating] = useState(false)
 
-  const upcoming = trips.filter((t) => (daysUntil(t.endDate || t.startDate) ?? 0) >= -1)
-  const past = trips.filter((t) => (daysUntil(t.endDate || t.startDate) ?? 1) < -1)
+  // A trip is "past" from the day after its last day; those move to a separate page.
+  const upcoming = trips.filter((t) => !isPast(t))
+  const past = trips.filter((t) => isPast(t))
 
   return (
     <AppShell bottomNav right={<Button size="sm" onClick={() => setCreating(true)}><Plus size={16} />Plan trip</Button>}>
@@ -33,12 +34,13 @@ export default function Home() {
       </section>
 
       {past.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Past trips</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {past.map((t) => <TripCard key={t.id} trip={t} items={items} actions={actions} profile={profile} />)}
-          </div>
-        </section>
+        <Link to="/past" className="block">
+          <Card className="flex items-center gap-3 transition hover:ring-brand-500/40">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink-800 text-brand-600"><History size={18} /></span>
+            <div className="flex-1"><p className="font-semibold text-slate-900">Past trips</p><p className="text-sm text-slate-500">{past.length} archived trip{past.length === 1 ? '' : 's'}</p></div>
+            <ChevronRight size={18} className="shrink-0 text-slate-400" />
+          </Card>
+        </Link>
       )}
 
       {creating && <TripCreateModal onClose={() => setCreating(false)} />}
@@ -46,7 +48,13 @@ export default function Home() {
   )
 }
 
-function TripCard({ trip, items, actions, profile }: {
+// Past = the trip has an end (or start) date that's already behind us.
+export const isPast = (t: Trip) => {
+  const d = daysUntil(t.endDate || t.startDate)
+  return d !== null && d < 0
+}
+
+export function TripCard({ trip, items, actions, profile }: {
   trip: Trip; items: any[]; actions: any[]; profile: (id?: string) => any
 }) {
   const ti = items.filter((i) => i.tripId === trip.id)

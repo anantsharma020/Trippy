@@ -7,6 +7,7 @@ import Home from './pages/Home'
 import Friends from './pages/Friends'
 import ProfilePage from './pages/ProfilePage'
 import CorePackingPage from './pages/CorePackingPage'
+import PastTripsPage from './pages/PastTripsPage'
 import WorldPage from './pages/WorldPage'
 import DreamsPage from './pages/DreamsPage'
 import DreamDetail from './pages/DreamDetail'
@@ -36,6 +37,7 @@ export default function App() {
       <Route path="/friends" element={<Friends />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/core-packing" element={<CorePackingPage />} />
+      <Route path="/past" element={<PastTripsPage />} />
       <Route path="/trip/:id" element={<TripLayout />}>
         <Route index element={<Overview />} />
         <Route path="itinerary" element={<Itinerary />} />

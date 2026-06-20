@@ -3,7 +3,7 @@ import { Trash2, MapPin, Calendar, X, Plus, Plane } from 'lucide-react'
 import { ITEM_CATEGORIES, type BookingDetails, type FlightLeg, type Item, type Trip, type ItemCategory } from '../lib/types'
 import { saveItem, deleteItem, BOOKABLE_CATS, CATEGORY_EMOJI } from '../lib/data'
 import { useApp } from '../lib/db'
-import { uid, durationBetween } from '../lib/util'
+import { uid, durationBetween, parseMapsLink } from '../lib/util'
 import { Modal, Field, Input, Textarea, Select, Button, Avatar, DateTimeField } from '../ui/primitives'
 import LocationSearch from './LocationSearch'
 
@@ -67,6 +67,7 @@ export default function ItemEditor({ trip, item, onClose }: {
             <LocationSearch placeholder={d.lat != null ? 'Change location…' : 'Search address or place…'} onPick={(r) =>
               set({ lat: r.latitude, lng: r.longitude, locationLabel: r.name, address: r.address, city: r.name })} />
             {d.address && d.address !== d.locationLabel && <p className="mt-1 text-xs text-slate-500">{d.address}</p>}
+            <MapsLinkInput onResolve={(lat, lng, label) => set({ lat, lng, locationLabel: label || d.title || 'Pinned location', city: d.city || label })} />
           </Field>
         )}
 
@@ -191,6 +192,35 @@ export default function ItemEditor({ trip, item, onClose }: {
         </div>
       </div>
     </Modal>
+  )
+}
+
+// Paste a Google Maps link to drop the pin exactly, for places search can't find.
+function MapsLinkInput({ onResolve }: { onResolve: (lat: number, lng: number, label?: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [url, setUrl] = useState('')
+  const [err, setErr] = useState('')
+
+  function apply(value: string) {
+    setUrl(value)
+    if (!value.trim()) { setErr(''); return }
+    const r = parseMapsLink(value)
+    if (r) { onResolve(r.lat, r.lng, r.label); setErr(''); setUrl(''); setOpen(false) }
+    else if (/maps\.app\.goo\.gl|goo\.gl\/maps/.test(value)) setErr('Short links don\'t contain coordinates — open it in Maps, then copy the full address-bar URL.')
+    else setErr('Couldn\'t find coordinates in that link.')
+  }
+
+  if (!open) return (
+    <button type="button" onClick={() => setOpen(true)} className="mt-1.5 text-xs font-medium text-brand-600 hover:text-brand-700">
+      Can't find it? Paste a Google Maps link
+    </button>
+  )
+  return (
+    <div className="mt-2">
+      <Input autoFocus value={url} onChange={(e) => apply(e.target.value)} placeholder="Paste a Google Maps link or lat, lng" className="text-sm" />
+      {err && <p className="mt-1 text-xs text-rose-500">{err}</p>}
+      <p className="mt-1 text-xs text-slate-500">In Google Maps: tap the place → Share → Copy link (or copy the URL from the address bar).</p>
+    </div>
   )
 }
 
