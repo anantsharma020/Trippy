@@ -3,7 +3,7 @@ import { Plus, Luggage, Trash2, Sparkles, Check, Pencil, X } from 'lucide-react'
 import { useTrip } from '../pages/TripLayout'
 import { useApp } from '../lib/db'
 import {
-  tripPacking, newPacking, savePacking, deletePacking,
+  myPacking, newPacking, savePacking, deletePacking,
   myTemplates, savePackTemplate, deletePackTemplate, newPackTemplate, seedTemplates,
 } from '../lib/data'
 import { PACKING_CATEGORIES, type PackingCategory, type PackingItem, type PackTemplate } from '../lib/types'
@@ -17,7 +17,7 @@ export default function Packing() {
   const [cat, setCat] = useState<PackingCategory>('Clothes')
   const [templates, setTemplates] = useState(false)
 
-  const items = tripPacking(trip.id)
+  const items = myPacking(trip.id, trip.ownerId)
   const packed = items.filter((i) => i.packed).length
   const byCat = PACKING_CATEGORIES
     .map((c) => ({ cat: c, list: items.filter((i) => i.category === c).sort((a, b) => a.title.localeCompare(b.title)) }))
@@ -115,7 +115,7 @@ function TemplatePicker({ trip, onClose }: { trip: any; onClose: () => void }) {
   async function apply(t: PackTemplate) {
     // Fold in your personal core list, and skip anything already on the trip's
     // list — so the core items (and shared basics) never double up across templates.
-    const seen = new Set(tripPacking(trip.id).map((p) => p.title.trim().toLowerCase()))
+    const seen = new Set(myPacking(trip.id, trip.ownerId).map((p) => p.title.trim().toLowerCase()))
     for (const it of [...core, ...t.items]) {
       const k = it.title.trim().toLowerCase()
       if (!k || seen.has(k)) continue

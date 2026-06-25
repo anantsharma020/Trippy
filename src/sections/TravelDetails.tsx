@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Plane, Hotel, Car, Train, FileText, ExternalLink, Copy } from 'lucide-react'
+import { Plus, Plane, Hotel, Car, Train, ExternalLink, Copy } from 'lucide-react'
 import { useTrip } from '../pages/TripLayout'
 import { useApp } from '../lib/db'
 import { tripItems, newItem } from '../lib/data'
@@ -14,14 +14,17 @@ const GROUPS: { title: string; icon: any; cats: ItemCategory[] }[] = [
   { title: 'Car rental', icon: Car, cats: ['Car rental'] },
   { title: 'Trains, ferries & transfers', icon: Train, cats: ['Train', 'Ferry', 'Transfer'] },
 ]
+// Travel Details is just for the things you need to keep: stays, flights, the car,
+// and transport — not every restaurant or class you book. Other bookings live with
+// their item in Ideas/Itinerary.
+const DETAIL_CATS = GROUPS.flatMap((g) => g.cats)
 
 export default function TravelDetails() {
   const { trip, canEdit } = useTrip()
   useApp((s) => s.items)
   const [opened, setOpened] = useState<{ item: Item; edit: boolean } | null>(null)
 
-  const booked = tripItems(trip.id).filter((i) => i.bookingStatus !== 'None' || ['Flight', 'Accommodation', 'Car rental', 'Train', 'Ferry', 'Transfer'].includes(i.category))
-  const other = booked.filter((i) => !GROUPS.some((g) => g.cats.includes(i.category)))
+  const booked = tripItems(trip.id).filter((i) => DETAIL_CATS.includes(i.category))
 
   return (
     <div className="space-y-5">
@@ -46,13 +49,6 @@ export default function TravelDetails() {
           </section>
         )
       })}
-
-      {other.length > 0 && (
-        <section>
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-300"><FileText size={16} />Other documents & bookings</h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{other.map((i) => <BookingCard key={i.id} item={i} onOpen={() => setOpened({ item: i, edit: false })} />)}</div>
-        </section>
-      )}
 
       {opened && <ItemModal trip={trip} item={opened.item} edit={opened.edit} canEdit={canEdit} onClose={() => setOpened(null)} />}
     </div>

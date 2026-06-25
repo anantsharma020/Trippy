@@ -6,16 +6,19 @@ import { signOut } from '../lib/auth'
 import { Avatar } from './primitives'
 import BottomNav from './BottomNav'
 
-export default function AppShell({ title, back, children, right, bottomNav }: {
-  title?: React.ReactNode; back?: string; children: React.ReactNode; right?: React.ReactNode; bottomNav?: boolean
+export default function AppShell({ title, back, children, right, bottomNav, subBar }: {
+  title?: React.ReactNode; back?: string; children: React.ReactNode; right?: React.ReactNode
+  bottomNav?: boolean; subBar?: React.ReactNode
 }) {
   const me = useApp((s) => s.me())
   const [menu, setMenu] = useState(false)
   const nav = useNavigate()
 
   return (
-    <div className="min-h-screen safe-top safe-bottom">
-      <header className="sticky top-0 z-30 border-b border-ink-800 bg-ink-950/80 backdrop-blur-xl">
+    <div className="min-h-screen safe-bottom">
+      {/* Header + optional sub-bar are one sticky block, so the section nav stays
+          glued under the title bar with no gap and never floats over content. */}
+      <header className="sticky top-0 z-30 border-b border-ink-800 bg-ink-950/80 backdrop-blur-xl safe-top">
         <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-3">
           {back ? (
             <Link to={back} className="rounded-lg p-1.5 hover:bg-ink-800 text-slate-300"><ChevronLeft size={20} /></Link>
@@ -46,6 +49,7 @@ export default function AppShell({ title, back, children, right, bottomNav }: {
             </div>
           </div>
         </div>
+        {subBar && <div className="mx-auto max-w-3xl px-4">{subBar}</div>}
       </header>
       <main className={`mx-auto max-w-3xl px-4 py-5 ${bottomNav ? 'pb-24' : ''}`}>{children}</main>
       {bottomNav && <BottomNav />}

@@ -70,15 +70,25 @@ export const deleteAction = (id: string) => app().del('actions', id)
 export const tripActions = (tripId: string) => app().actions.filter((a) => a.tripId === tripId)
 
 // --- Packing ----------------------------------------------------------------
+// Each trip member keeps their own packing list (we don't always travel together),
+// so a new item is owned by whoever created it via `person`.
 export function newPacking(tripId: string, partial: Partial<PackingItem> = {}): PackingItem {
   return {
     id: uid(), tripId, title: partial.title || '', category: partial.category || 'Miscellaneous',
-    quantity: partial.quantity ?? 1, packed: partial.packed ?? false, ...partial,
+    quantity: partial.quantity ?? 1, packed: partial.packed ?? false,
+    person: partial.person ?? app().user?.id, ...partial,
   }
 }
-export const savePacking = (p: PackingItem) => app().put('packing', p, p.tripId)
+export const savePacking = (p: PackingItem) => app().put('packing', p, p.tripId, p.person)
 export const deletePacking = (id: string) => app().del('packing', id)
 export const tripPacking = (tripId: string) => app().packing.filter((p) => p.tripId === tripId)
+
+// The current user's own packing list for a trip. Legacy items saved before lists
+// were per-person (no `person`) stay visible to the trip owner so nothing is lost.
+export const myPacking = (tripId: string, ownerId?: string): PackingItem[] => {
+  const me = app().user?.id
+  return tripPacking(tripId).filter((p) => p.person === me || (!p.person && ownerId === me))
+}
 
 // --- Packing templates (per-user, editable) ---------------------------------
 export const myTemplates = (): PackTemplate[] => {

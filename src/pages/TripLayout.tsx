@@ -27,18 +27,21 @@ export default function TripLayout() {
   const canEdit = role === 'owner' || role === 'editor'
   const ctx: TripCtx = { trip, role, canEdit }
 
+  const nav = (
+    <nav className="flex gap-1 overflow-x-auto pb-2">
+      {TABS.map((t) => (
+        <NavLink key={t.label} to={t.to} end={t.end} replace
+          className={({ isActive }) => classNames(
+            'flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition',
+            isActive ? 'bg-brand-600 text-white' : 'bg-ink-900/60 text-slate-300 hover:bg-ink-800')}>
+          <t.icon size={15} />{t.label}
+        </NavLink>
+      ))}
+    </nav>
+  )
+
   return (
-    <AppShell title={trip.name} back="/">
-      <nav className="-mx-4 mb-5 flex gap-1 overflow-x-auto border-b border-ink-800 bg-ink-950/85 px-4 pb-2 pt-1 backdrop-blur-xl sticky top-[57px] z-20">
-        {TABS.map((t) => (
-          <NavLink key={t.label} to={t.to} end={t.end} replace
-            className={({ isActive }) => classNames(
-              'flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition',
-              isActive ? 'bg-brand-600 text-white' : 'bg-ink-900/60 text-slate-300 hover:bg-ink-800')}>
-            <t.icon size={15} />{t.label}
-          </NavLink>
-        ))}
-      </nav>
+    <AppShell title={trip.name} back="/" subBar={nav}>
       <Outlet context={ctx} />
     </AppShell>
   )

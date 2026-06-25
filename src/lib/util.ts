@@ -40,6 +40,41 @@ export const countdownLabel = (iso?: string): string => {
   return `Ended ${Math.abs(d)} days ago`
 }
 
+// Where a trip sits relative to today, using the full start→end range.
+// `upcoming` = starts in the future (or no dates yet); `active` = underway today
+// (started, not yet ended); `past` = the last day is behind us.
+export type TripPhase = 'upcoming' | 'active' | 'past'
+
+export const tripPhase = (start?: string, end?: string): TripPhase => {
+  const s = daysUntil(start)
+  if (s === null) return 'upcoming' // no dates yet → still being planned
+  if (s > 0) return 'upcoming'
+  const e = daysUntil(end || start)
+  if (e !== null && e < 0) return 'past'
+  return 'active'
+}
+
+// A single status chip label that respects the whole date range, so an ongoing
+// trip reads "Day 2 of 7" rather than "Ended yesterday".
+export const tripStatusLabel = (start?: string, end?: string): string => {
+  const phase = tripPhase(start, end)
+  if (phase === 'upcoming') {
+    const d = daysUntil(start)
+    if (d === null) return ''
+    if (d > 1) return `${d} days to go`
+    if (d === 1) return 'Tomorrow'
+    return 'Starts today'
+  }
+  if (phase === 'active') {
+    const total = nights(start, end) + 1 // inclusive day count
+    const dayNum = 1 - (daysUntil(start) ?? 0) // start day = 1
+    return total > 1 ? `Day ${dayNum} of ${total}` : 'Happening now'
+  }
+  const d = daysUntil(end || start)
+  if (d === -1) return 'Ended yesterday'
+  return `Ended ${Math.abs(d ?? 0)} days ago`
+}
+
 export const classNames = (...xs: (string | false | null | undefined)[]) =>
   xs.filter(Boolean).join(' ')
 
